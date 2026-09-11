@@ -37,6 +37,8 @@ export default grammar({
 
   conflicts: $ => [
     [$._expression, $.parameter],
+    // A conditional key and a typed lambda share the prefix `(name:`.
+    [$._object_key, $.lambda_expression],
   ],
 
   word: $ => $.identifier,
@@ -122,7 +124,15 @@ export default grammar({
     namespace_directive: $ => seq(
       choice('%ns', '%namespace', 'ns', 'namespace'),
       field('prefix', $.identifier),
-      field('uri', choice($.string, $.identifier))
+      field('uri', choice($.namespace_uri, $.string, $.identifier))
+    ),
+
+    namespace_uri: $ => /[a-zA-Z][a-zA-Z0-9+.-]*:[^\s]+/,
+
+    qualified_name: $ => seq(
+      field('namespace', $.identifier),
+      '#',
+      field('name', choice($.identifier, $.string))
     ),
 
     import_directive: $ => seq(
@@ -318,11 +328,12 @@ export default grammar({
       ')'
     ),
 
-    _object_key: $ => choice(
+    _object_key: $ => prec(PREC.LAMBDA, choice(
+      $.qualified_name,
       $.identifier,
       $.string,
       $.number
-    ),
+    )),
 
     // --- Array literal ---
     array: $ => seq(
@@ -384,7 +395,7 @@ export default grammar({
 
     string_content: $ => token.immediate(prec(1, /[^"\\$]+/)),
     single_quote_content: $ => token.immediate(prec(1, /[^'\\]+/)),
-    triple_quote_content: $ => token.immediate(prec(1, /([^"\\]|"[^"]|""[^"])+/)),
+    triple_quote_content: $ => token.immediate(choice(/[^"\\$]+/, '"', '""')),
     escape_sequence: $ => token.immediate(seq('\\', /./)),
     interpolation: $ => seq('$(', field('expression', $._expression), ')'),
 
@@ -403,7 +414,7 @@ export default grammar({
 
     binary_expression: $ => choice(
       prec.left(PREC.MULTIPLY, seq($._expression, choice('*', '/'), $._expression)),
-      prec.left(PREC.ADD, seq($._expression, choice('+', '-', '++', '--'), $._expression)),
+      prec.left(PREC.ADD, seq($._expression, choice('+', '-', '++', '--', '<<', '>>'), $._expression)),
       prec.left(PREC.RELATIONAL, seq($._expression, choice('<', '<=', '>', '>='), $._expression)),
       prec.left(PREC.EQUALITY, seq($._expression, choice('==', '!=', '~='), $._expression)),
       prec.left(PREC.LOGICAL_AND, seq($._expression, 'and', $._expression)),
@@ -456,9 +467,22 @@ export default grammar({
 
     match_case: $ => seq(
       'case',
-      optional(field('variable', $.identifier)),
-      optional(seq('is', field('type', $._type))),
-      optional(seq('if', field('guard', $._expression))),
+      choice(
+        seq(
+          optional(seq(field('variable', $.identifier), ':')),
+          field('pattern', choice($.string, $.number, $.boolean, $.null))
+        ),
+        seq(
+          optional(field('variable', $.identifier)),
+          choice(
+            seq('matches', field('pattern', $.regex)),
+            seq(
+              optional(seq('is', field('type', $._type))),
+              optional(seq('if', field('guard', $._expression)))
+            )
+          )
+        )
+      ),
       '->',
       field('consequence', $._expression)
     ),
@@ -500,31 +524,31 @@ export default grammar({
     member_expression: $ => prec.left(PREC.SELECTOR, seq(
       field('object', $._expression),
       '.',
-      field('property', choice($.identifier, $.string))
+      field('property', choice($.identifier, $.string, $.qualified_name))
     )),
 
     descendant_expression: $ => prec.left(PREC.SELECTOR, seq(
       field('object', $._expression),
       '..',
-      field('property', choice($.identifier, $.string))
+      field('property', choice($.identifier, $.string, $.qualified_name))
     )),
 
     multi_value_expression: $ => prec.left(PREC.SELECTOR, seq(
       field('object', $._expression),
       '.*',
-      field('property', choice($.identifier, $.string))
+      field('property', choice($.identifier, $.string, $.qualified_name))
     )),
 
     attribute_expression: $ => prec.left(PREC.SELECTOR, seq(
       field('object', $._expression),
       choice('.@', '@'),
-      field('attribute', choice($.identifier, $.string))
+      field('attribute', choice($.identifier, $.string, $.qualified_name))
     )),
 
     key_expression: $ => prec.left(PREC.SELECTOR, seq(
       field('object', $._expression),
       '.&',
-      field('key', choice($.identifier, $.string))
+      field('key', choice($.identifier, $.string, $.qualified_name))
     )),
 
     null_safe_selector: $ => prec.left(PREC.SELECTOR, choice(
