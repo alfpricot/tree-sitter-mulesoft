@@ -1,0 +1,88 @@
+==================
+Resource hierarchy and URI parameters
+==================
+
+#%RAML 1.0
+title: Resource Test
+
+/users:
+  displayName: Users
+  /{userId}:
+    uriParameters:
+      userId:
+        type: integer
+    /orders:
+      get:
+        description: Get user orders
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (block_mapping_pair
+          (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (block_node
+            (block_mapping
+              (block_mapping_pair
+                (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (flow_node
+                  (plain_scalar
+                    (string_scalar))))
+              (block_mapping_pair
+                (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar))))))))))
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar))))))))))))))))))))
