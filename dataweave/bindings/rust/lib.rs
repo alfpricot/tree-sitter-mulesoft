@@ -71,4 +71,10 @@ mod tests {
             .unwrap();
         assert!(!tree.root_node().has_error());
     }
+
+    #[test]
+    fn test_highlights_query_compiles() {
+        tree_sitter::Query::new(&LANGUAGE.into(), HIGHLIGHTS_QUERY)
+            .expect("DataWeave highlights must match the exported grammar");
+    }
 }

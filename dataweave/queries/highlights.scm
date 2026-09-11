@@ -33,6 +33,7 @@
   "else"
   "match"
   "case"
+  "matches"
   "do"
   "default"
   "as"
@@ -59,6 +60,9 @@
 ; Types
 (type_name) @type.builtin
 (type_directive name: (identifier) @type)
+(namespace_uri) @string.special
+(qualified_name namespace: (identifier) @module)
+(qualified_name name: (identifier) @property)
 
 ; Functions & Calls
 (fun_directive name: (identifier) @function)
@@ -84,6 +88,9 @@
   "/"
   "++"
   "--"
+  "<<"
+  ">>"
+  "#"
   "=="
   "!="
   "~="
