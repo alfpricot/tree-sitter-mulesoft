@@ -1,0 +1,54 @@
+name: Cleanup stale caches
+
+on:
+  schedule:
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: List stale caches without deleting them
+        type: boolean
+        default: false
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: cache-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Delete stale caches
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Delete caches for closed pull requests and deleted branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+        run: |
+          set -euo pipefail
+          gh cache list --limit 200 --json id,ref,key,sizeInBytes \
+            --jq '.[] | [.id, .ref, .key, .sizeInBytes] | @tsv' > caches.tsv
+          while IFS=$'\t' read -r id ref key size; do
+            [ -z "$id" ] && continue
+            stale=false
+            case "$ref" in
+              refs/pull/*/merge)
+                pr_number=$(echo "$ref" | sed -E 's#refs/pull/([0-9]+)/merge#\1#')
+                state=$(gh pr view "$pr_number" --json state --jq '.state' 2>/dev/null || echo MISSING)
+                [ "$state" != OPEN ] && stale=true
+                ;;
+              refs/heads/*)
+                branch="${ref#refs/heads/}"
+                git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1 || stale=true
+                ;;
+            esac
+            if [ "$stale" = true ]; then
+              echo "Stale: $key ($ref, $size bytes)"
+              [ "$DRY_RUN" = true ] || gh cache delete "$id"
+            fi
+          done < caches.tsv

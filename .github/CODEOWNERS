@@ -1,0 +1,14 @@
+# Repository ownership. Multiple owners on a line require only one approval;
+# the final matching pattern controls review routing.
+
+# Source grammars, generated parser artifacts, bindings, tests, and docs.
+* @meloncholic
+
+# Automation, dependency policy, and security reporting affect the repository
+# control plane and remain explicitly owned as the repository grows.
+/.github/workflows/** @meloncholic
+/.github/dependabot.yml @meloncholic
+/SECURITY.md @meloncholic
+
+# Keep the ownership policy itself under maintainer review.
+/.github/CODEOWNERS @meloncholic

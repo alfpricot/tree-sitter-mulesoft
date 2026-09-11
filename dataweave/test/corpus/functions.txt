@@ -1,0 +1,102 @@
+==================
+Lambdas and higher-order functions
+==================
+
+%dw 2.0
+output application/json
+---
+{
+  mapped: payload.items map ((item, index) -> {
+    id: index,
+    name: item.name
+  }),
+  filtered: payload.items filter ($.age > 18),
+  reduced: [1, 2, 3] reduce ((item, acc = 0) -> acc + item),
+  plucked: payload.user pluck ((value, key) -> key)
+}
+
+---
+
+(document
+  (header
+    (version_directive
+      (version_number))
+    (output_directive
+      (mime_type)))
+  (object
+    (object_entry
+      (pair
+        (identifier)
+        (infix_call
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier)
+          (parenthesized_expression
+            (lambda_expression
+              (parameter_list
+                (parameter
+                  (identifier))
+                (parameter
+                  (identifier)))
+              (object
+                (object_entry
+                  (pair
+                    (identifier)
+                    (identifier)))
+                (object_entry
+                  (pair
+                    (identifier)
+                    (member_expression
+                      (identifier)
+                      (identifier))))))))))
+    (object_entry
+      (pair
+        (identifier)
+        (infix_call
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier)
+          (parenthesized_expression
+            (binary_expression
+              (member_expression
+                (anonymous_parameter)
+                (identifier))
+              (number))))))
+    (object_entry
+      (pair
+        (identifier)
+        (infix_call
+          (array
+            (number)
+            (number)
+            (number))
+          (identifier)
+          (parenthesized_expression
+            (lambda_expression
+              (parameter_list
+                (parameter
+                  (identifier))
+                (parameter
+                  (identifier)
+                  (number)))
+              (binary_expression
+                (identifier)
+                (identifier)))))))
+    (object_entry
+      (pair
+        (identifier)
+        (infix_call
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier)
+          (parenthesized_expression
+            (lambda_expression
+              (parameter_list
+                (parameter
+                  (identifier))
+                (parameter
+                  (identifier)))
+              (identifier))))))))

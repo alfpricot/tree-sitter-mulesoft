@@ -1,0 +1,117 @@
+==================
+Object literals with conditional and dynamic keys
+==================
+
+%dw 2.0
+output application/json
+---
+{
+  simpleKey: "value",
+  "quotedKey": 123,
+  (dynamicKey): true,
+  ("conditionalKey": "present") if (condition == true),
+  nested: {
+    a: null,
+    b: |2026-09-11|,
+    c: /abc[0-9]+/i
+  }
+}
+
+---
+
+(document
+  (header
+    (version_directive
+      (version_number))
+    (output_directive
+      (mime_type)))
+  (object
+    (object_entry
+      (pair
+        (identifier)
+        (string
+          (double_quoted_string
+            (string_content)))))
+    (object_entry
+      (pair
+        (string
+          (double_quoted_string
+            (string_content)))
+        (number)))
+    (object_entry
+      (dynamic_pair
+        (identifier)
+        (boolean)))
+    (object_entry
+      (conditional_pair
+        (pair
+          (string
+            (double_quoted_string
+              (string_content)))
+          (string
+            (double_quoted_string
+              (string_content))))
+        (conditional_clause
+          (binary_expression
+            (identifier)
+            (boolean)))))
+    (object_entry
+      (pair
+        (identifier)
+        (object
+          (object_entry
+            (pair
+              (identifier)
+              (null)))
+          (object_entry
+            (pair
+              (identifier)
+              (date_time)))
+          (object_entry
+            (pair
+              (identifier)
+              (regex))))))))
+
+==================
+Array and string literals
+==================
+
+%dw 2.0
+output application/json
+---
+[
+  1,
+  2.5,
+  -42,
+  0x1f,
+  "Double quoted with $(vars.name)",
+  'Single quoted string',
+  """Triple quoted string"""
+]
+
+---
+
+(document
+  (header
+    (version_directive
+      (version_number))
+    (output_directive
+      (mime_type)))
+  (array
+    (number)
+    (number)
+    (number)
+    (number)
+    (string
+      (double_quoted_string
+        (string_content)
+        (interpolation
+          (member_expression
+            (identifier)
+            (identifier)))))
+    (string
+      (single_quoted_string
+        (single_quote_content)))
+    (string
+      (triple_quoted_string
+        (triple_quote_content)))))

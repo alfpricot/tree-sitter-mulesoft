@@ -1,0 +1,105 @@
+==================
+Types and schemas in RAML 1.0 and 0.8
+==================
+
+#%RAML 1.0
+title: Types Test
+
+types:
+  Person:
+    type: object
+    properties:
+      name: string
+      age?: integer
+  Employees:
+    type: Person[]
+
+schemas:
+  LegacySchema:
+    type: object
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (block_mapping_pair
+          (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (block_node
+            (block_mapping
+              (block_mapping_pair
+                (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar))))
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar))))
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar))))))))))
+              (block_mapping_pair
+                (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar))))))))))
+        (block_mapping_pair
+          (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (block_node
+            (block_mapping
+              (block_mapping_pair
+                (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar))))))))))))))

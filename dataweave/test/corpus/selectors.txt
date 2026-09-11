@@ -1,0 +1,96 @@
+==================
+Field, descendant, multi-value and attribute selectors
+==================
+
+%dw 2.0
+output application/json
+---
+{
+  field: payload.user.name,
+  descendant: payload..id,
+  multiValue: payload.*order,
+  attribute: payload.@status,
+  key: payload.&type,
+  nullSafe: payload.?phone,
+  index: payload.items[0],
+  range: payload.items[0 to 5],
+  filter: payload.users[?($.age > 21)]
+}
+
+---
+
+(document
+  (header
+    (version_directive
+      (version_number))
+    (output_directive
+      (mime_type)))
+  (object
+    (object_entry
+      (pair
+        (identifier)
+        (member_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (descendant_expression
+          (identifier)
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (multi_value_expression
+          (identifier)
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (attribute_expression
+          (identifier)
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (key_expression
+          (identifier)
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (null_safe_selector
+          (identifier)
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (index_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (number))))
+    (object_entry
+      (pair
+        (identifier)
+        (index_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (number)
+          (number))))
+    (object_entry
+      (pair
+        (identifier)
+        (filter_selector_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (binary_expression
+              (member_expression
+                (anonymous_parameter)
+                (identifier))
+              (number))))))))

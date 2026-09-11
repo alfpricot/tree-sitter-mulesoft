@@ -1,0 +1,106 @@
+==================
+Version and output directive
+==================
+
+%dw 2.0
+output application/json
+---
+{}
+
+---
+
+(document
+  (header
+    (version_directive
+      version: (version_number))
+    (output_directive
+      mime_type: (mime_type)))
+  (object))
+
+==================
+Var, fun, and type directives
+==================
+
+%dw 2.0
+var greeting = "Hello World"
+fun add(a: Number, b: Number): Number = a + b
+type MyObject = {
+  name: String,
+  age?: Number
+}
+---
+greeting
+
+---
+
+(document
+  (header
+    (version_directive
+      version: (version_number))
+    (var_directive
+      name: (identifier)
+      value: (string
+        (double_quoted_string
+          (string_content))))
+    (fun_directive
+      name: (identifier)
+      (parameter_list
+        (parameter
+          name: (identifier)
+          type: (type_name))
+        (parameter
+          name: (identifier)
+          type: (type_name)))
+      return_type: (type_name)
+      body: (binary_expression
+        (identifier)
+        (identifier)))
+    (type_directive
+      name: (identifier)
+      type: (object_type
+        (type_field
+          name: (identifier)
+          type: (type_name))
+        (type_field
+          name: (identifier)
+          type: (type_name)))))
+  (identifier))
+
+==================
+Import directives
+==================
+
+%dw 2.0
+import * from dw::core::Strings
+import trim, upper from dw::core::Strings
+import dw::util::Timer
+---
+Timer::currentMilliseconds()
+
+---
+
+(document
+  (header
+    (version_directive
+      version: (version_number))
+    (import_directive
+      module: (module_path
+        (identifier)
+        (identifier)
+        (identifier)))
+    (import_directive
+      (identifier)
+      (identifier)
+      module: (module_path
+        (identifier)
+        (identifier)
+        (identifier)))
+    (import_directive
+      module: (module_path
+        (identifier)
+        (identifier)
+        (identifier))))
+  (call_expression
+    function: (module_path
+      (identifier)
+      (identifier))))

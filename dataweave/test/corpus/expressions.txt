@@ -1,0 +1,191 @@
+==================
+Operators and type coercions
+==================
+
+%dw 2.0
+output application/json
+---
+{
+  arithmetic: (1 + 2 * 3) / 4 - 5,
+  concat: "a" ++ "b",
+  diff: [1, 2] -- [2],
+  comparison: 10 >= 5 and 3 != 4,
+  matchOperator: "test" ~= /test/,
+  typeCoercion: payload.date as Date { format: "yyyy-MM-dd" },
+  typeCheck: payload is Object,
+  defaultVal: payload.name default "Guest",
+  elvisVal: payload.email ?: "none"
+}
+
+---
+
+(document
+  (header
+    (version_directive
+      (version_number))
+    (output_directive
+      (mime_type)))
+  (object
+    (object_entry
+      (pair
+        (identifier)
+        (binary_expression
+          (binary_expression
+            (parenthesized_expression
+              (binary_expression
+                (number)
+                (binary_expression
+                  (number)
+                  (number))))
+            (number))
+          (number))))
+    (object_entry
+      (pair
+        (identifier)
+        (binary_expression
+          (string
+            (double_quoted_string
+              (string_content)))
+          (string
+            (double_quoted_string
+              (string_content))))))
+    (object_entry
+      (pair
+        (identifier)
+        (binary_expression
+          (array
+            (number)
+            (number))
+          (array
+            (number)))))
+    (object_entry
+      (pair
+        (identifier)
+        (binary_expression
+          (binary_expression
+            (number)
+            (number))
+          (binary_expression
+            (number)
+            (number)))))
+    (object_entry
+      (pair
+        (identifier)
+        (binary_expression
+          (string
+            (double_quoted_string
+              (string_content)))
+          (regex))))
+    (object_entry
+      (pair
+        (identifier)
+        (as_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (type_with_parameters
+            (type_name)
+            (object
+              (object_entry
+                (pair
+                  (identifier)
+                  (string
+                    (double_quoted_string
+                      (string_content))))))))))
+    (object_entry
+      (pair
+        (identifier)
+        (is_expression
+          (identifier)
+          (type_name))))
+    (object_entry
+      (pair
+        (identifier)
+        (default_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (string
+            (double_quoted_string
+              (string_content))))))
+    (object_entry
+      (pair
+        (identifier)
+        (default_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (string
+            (double_quoted_string
+              (string_content))))))))
+
+==================
+If else expression and match expression
+==================
+
+%dw 2.0
+output application/json
+---
+if (payload.status == "ACTIVE") {
+  result: payload.value match {
+    case is Number -> "number"
+    case str is String if (str != "") -> "string: $(str)"
+    else -> "other"
+  }
+} else {
+  result: "inactive"
+}
+
+---
+
+(document
+  (header
+    (version_directive
+      (version_number))
+    (output_directive
+      (mime_type)))
+  (if_expression
+    (binary_expression
+      (member_expression
+        (identifier)
+        (identifier))
+      (string
+        (double_quoted_string
+          (string_content))))
+    (object
+      (object_entry
+        (pair
+          (identifier)
+          (match_expression
+            (member_expression
+              (identifier)
+              (identifier))
+            (match_case
+              (type_name)
+              (string
+                (double_quoted_string
+                  (string_content))))
+            (match_case
+              (identifier)
+              (type_name)
+              (parenthesized_expression
+                (binary_expression
+                  (identifier)
+                  (string
+                    (double_quoted_string))))
+              (string
+                (double_quoted_string
+                  (string_content)
+                  (interpolation
+                    (identifier)))))
+            (match_else
+              (string
+                (double_quoted_string
+                  (string_content))))))))
+    (object
+      (object_entry
+        (pair
+          (identifier)
+          (string
+            (double_quoted_string
+              (string_content))))))))

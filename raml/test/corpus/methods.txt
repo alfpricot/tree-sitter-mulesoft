@@ -1,0 +1,161 @@
+==================
+HTTP methods with headers and responses
+==================
+
+#%RAML 1.0
+title: Methods Test
+
+/items:
+  get:
+    queryParameters:
+      limit:
+        type: integer
+        default: 10
+    responses:
+      200:
+        body:
+          application/json:
+            type: array
+  post:
+    headers:
+      Authorization:
+        type: string
+        required: true
+    responses:
+      201:
+        description: Created
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (block_mapping_pair
+          (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (block_node
+            (block_mapping
+              (block_mapping_pair
+                (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar))))
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (flow_node
+                                    (plain_scalar
+                                      (integer_scalar))))))))))
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (integer_scalar)))
+                            (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (block_node
+                                    (block_mapping
+                                      (block_mapping_pair
+                                        (flow_node
+                                          (plain_scalar
+                                            (string_scalar)))
+                                        (block_node
+                                          (block_mapping
+                                            (block_mapping_pair
+                                              (flow_node
+                                                (plain_scalar
+                                                  (string_scalar)))
+                                              (flow_node
+                                                (plain_scalar
+                                                  (string_scalar)))))))))))))))))))
+              (block_mapping_pair
+                (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar))))
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (flow_node
+                                    (plain_scalar
+                                      (boolean_scalar))))))))))
+                    (block_mapping_pair
+                      (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            (flow_node
+                              (plain_scalar
+                                (integer_scalar)))
+                            (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  (flow_node
+                                    (plain_scalar
+                                      (string_scalar))))))))))))))))))))
