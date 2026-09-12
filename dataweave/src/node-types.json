@@ -356,6 +356,10 @@
             "named": true
           },
           {
+            "type": "qualified_name",
+            "named": true
+          },
+          {
             "type": "string",
             "named": true
           }
@@ -1460,6 +1464,10 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "qualified_name",
             "named": true
           },
           {
@@ -4243,6 +4251,10 @@
             "named": true
           },
           {
+            "type": "qualified_name",
+            "named": true
+          },
+          {
             "type": "string",
             "named": true
           }
@@ -4836,6 +4848,32 @@
           }
         ]
       },
+      "pattern": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "regex",
+            "named": true
+          },
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      },
       "type": {
         "multiple": false,
         "required": false,
@@ -5321,6 +5359,10 @@
             "named": true
           },
           {
+            "type": "qualified_name",
+            "named": true
+          },
+          {
             "type": "string",
             "named": true
           }
@@ -5486,6 +5528,10 @@
             "named": true
           },
           {
+            "type": "qualified_name",
+            "named": true
+          },
+          {
             "type": "string",
             "named": true
           }
@@ -5513,6 +5559,10 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "namespace_uri",
             "named": true
           },
           {
@@ -5774,6 +5824,10 @@
           },
           {
             "type": "number",
+            "named": true
+          },
+          {
+            "type": "qualified_name",
             "named": true
           },
           {
@@ -6291,6 +6345,36 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "qualified_name",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      },
+      "namespace": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -6995,6 +7079,10 @@
     "named": false
   },
   {
+    "type": "#",
+    "named": false
+  },
+  {
     "type": "$",
     "named": false
   },
@@ -7135,6 +7223,10 @@
     "named": false
   },
   {
+    "type": "<<",
+    "named": false
+  },
+  {
     "type": "<=",
     "named": false
   },
@@ -7152,6 +7244,10 @@
   },
   {
     "type": ">=",
+    "named": false
+  },
+  {
+    "type": ">>",
     "named": false
   },
   {
@@ -7361,12 +7457,20 @@
     "named": false
   },
   {
+    "type": "matches",
+    "named": false
+  },
+  {
     "type": "mime_type",
     "named": true
   },
   {
     "type": "namespace",
     "named": false
+  },
+  {
+    "type": "namespace_uri",
+    "named": true
   },
   {
     "type": "not",

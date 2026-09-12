@@ -1,0 +1,121 @@
+==================
+Append and prepend operators
+==================
+
+{ append: [1] << 2, prepend: 0 >> [1] }
+
+---
+
+(document
+  (object
+    (object_entry (pair (identifier) (binary_expression (array (number)) (number))))
+    (object_entry (pair (identifier) (binary_expression (number) (array (number)))))))
+
+==================
+Namespace URI and qualified keys and selectors
+==================
+
+%dw 2.0
+ns example http://example.org/schema
+ns other urn:example:other
+output application/xml
+---
+{ example#item: payload.example#item, other#id: payload.@other#id }
+
+---
+
+(document
+  (header
+    (version_directive (version_number))
+    (namespace_directive (identifier) (namespace_uri))
+    (namespace_directive (identifier) (namespace_uri))
+    (output_directive (mime_type)))
+  (object
+    (object_entry (pair (qualified_name (identifier) (identifier)) (member_expression (identifier) (qualified_name (identifier) (identifier)))))
+    (object_entry (pair (qualified_name (identifier) (identifier)) (attribute_expression (identifier) (qualified_name (identifier) (identifier)))))))
+
+==================
+Literal and regular expression match cases
+==================
+
+payload match {
+  case "ready" -> 1
+  case status: "waiting" -> 2
+  case 0 -> 3
+  case false -> 4
+  case null -> 5
+  case text matches /item[0-9]+/ -> text
+  else -> 6
+}
+
+---
+
+(document
+  (match_expression
+    (identifier)
+    (match_case (string (double_quoted_string (string_content))) (number))
+    (match_case (identifier) (string (double_quoted_string (string_content))) (number))
+    (match_case (number) (number))
+    (match_case (boolean) (number))
+    (match_case (null) (number))
+    (match_case (identifier) (regex) (identifier))
+    (match_else (number))))
+
+==================
+Triple quoted interpolation
+==================
+
+"""Hello $(name)
+Next line"""
+
+---
+
+(document
+  (string
+    (triple_quoted_string
+      (triple_quote_content)
+      (interpolation (identifier))
+      (triple_quote_content))))
+==================
+Conditional identifier keys and object spread
+==================
+
+{ (extra: true) if (enabled), (payload) }
+
+---
+
+(document
+  (object
+    (object_entry
+      (conditional_pair
+        (pair (identifier) (boolean))
+        (conditional_clause (identifier))))
+    (object_entry (spread_expression (identifier)))))
+==================
+Quotes next to triple quoted interpolation
+==================
+
+""""$(name)" end"""
+
+---
+
+(document
+  (string
+    (triple_quoted_string
+      (triple_quote_content)
+      (interpolation (identifier))
+      (triple_quote_content)
+      (triple_quote_content))))
+==================
+Typed lambda inside object spread
+==================
+
+{ (item: Object -> item) }
+
+---
+
+(document
+  (object
+    (object_entry
+      (spread_expression
+        (lambda_expression (identifier) (type_name) (identifier))))))
