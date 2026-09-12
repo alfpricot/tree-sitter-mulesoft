@@ -1,5 +1,6 @@
 #include "tree_sitter/array.h"
 #include "tree_sitter/parser.h"
+#include <string.h>
 
 #define _str(x) #x
 #define _file(x) _str(schema.x.c)
@@ -164,23 +165,25 @@ typedef struct {
 
 static unsigned serialize(Scanner *scanner, char *buffer) {
     size_t size = 0;
-    *(int16_t *)&buffer[size] = scanner->row;
+    memcpy(&buffer[size], &scanner->row, sizeof(int16_t));
     size += sizeof(int16_t);
-    *(int16_t *)&buffer[size] = scanner->col;
+    memcpy(&buffer[size], &scanner->col, sizeof(int16_t));
     size += sizeof(int16_t);
-    *(int16_t *)&buffer[size] = scanner->blk_imp_row;
+    memcpy(&buffer[size], &scanner->blk_imp_row, sizeof(int16_t));
     size += sizeof(int16_t);
-    *(int16_t *)&buffer[size] = scanner->blk_imp_col;
+    memcpy(&buffer[size], &scanner->blk_imp_col, sizeof(int16_t));
     size += sizeof(int16_t);
-    *(int16_t *)&buffer[size] = scanner->blk_imp_tab;
+    memcpy(&buffer[size], &scanner->blk_imp_tab, sizeof(int16_t));
     size += sizeof(int16_t);
     int16_t *typ_itr = scanner->ind_typ_stk.contents + 1;
     int16_t *typ_end = scanner->ind_typ_stk.contents + scanner->ind_typ_stk.size;
     int16_t *len_itr = scanner->ind_len_stk.contents + 1;
-    for (; typ_itr != typ_end && size < TREE_SITTER_SERIALIZATION_BUFFER_SIZE; ++typ_itr, ++len_itr) {
-        *(int16_t *)&buffer[size] = *typ_itr;
+    // Keep complete indentation pairs within Tree-sitter's fixed-size buffer.
+    for (; typ_itr != typ_end && size + 2 * sizeof(int16_t) <= TREE_SITTER_SERIALIZATION_BUFFER_SIZE;
+         ++typ_itr, ++len_itr) {
+        memcpy(&buffer[size], typ_itr, sizeof(int16_t));
         size += sizeof(int16_t);
-        *(int16_t *)&buffer[size] = *len_itr;
+        memcpy(&buffer[size], len_itr, sizeof(int16_t));
         size += sizeof(int16_t);
     }
     return size;
@@ -196,22 +199,32 @@ static void deserialize(Scanner *scanner, const char *buffer, unsigned length) {
     array_push(&scanner->ind_typ_stk, IND_ROT);
     array_delete(&scanner->ind_len_stk);
     array_push(&scanner->ind_len_stk, -1);
+    const size_t header_size = 5 * sizeof(int16_t);
+    const size_t pair_size = 2 * sizeof(int16_t);
+    if (length < header_size || length > TREE_SITTER_SERIALIZATION_BUFFER_SIZE ||
+        (length - header_size) % pair_size != 0) {
+        return;
+    }
     if (length > 0) {
         size_t size = 0;
-        scanner->row = *(int16_t *)&buffer[size];
+        memcpy(&scanner->row, &buffer[size], sizeof(int16_t));
         size += sizeof(int16_t);
-        scanner->col = *(int16_t *)&buffer[size];
+        memcpy(&scanner->col, &buffer[size], sizeof(int16_t));
         size += sizeof(int16_t);
-        scanner->blk_imp_row = *(int16_t *)&buffer[size];
+        memcpy(&scanner->blk_imp_row, &buffer[size], sizeof(int16_t));
         size += sizeof(int16_t);
-        scanner->blk_imp_col = *(int16_t *)&buffer[size];
+        memcpy(&scanner->blk_imp_col, &buffer[size], sizeof(int16_t));
         size += sizeof(int16_t);
-        scanner->blk_imp_tab = *(int16_t *)&buffer[size];
+        memcpy(&scanner->blk_imp_tab, &buffer[size], sizeof(int16_t));
         size += sizeof(int16_t);
         while (size < length) {
-            array_push(&scanner->ind_typ_stk, *(int16_t *)&buffer[size]);
+            int16_t type;
+            int16_t indent;
+            memcpy(&type, &buffer[size], sizeof(int16_t));
+            array_push(&scanner->ind_typ_stk, type);
             size += sizeof(int16_t);
-            array_push(&scanner->ind_len_stk, *(int16_t *)&buffer[size]);
+            memcpy(&indent, &buffer[size], sizeof(int16_t));
+            array_push(&scanner->ind_len_stk, indent);
             size += sizeof(int16_t);
         }
         assert(size == length);
@@ -1413,4 +1426,3 @@ bool tree_sitter_raml_external_scanner_scan(void *payload, TSLexer *lexer, const
     Scanner *scanner = (Scanner *)payload;
     return scan(scanner, lexer, valid_symbols);
 }
-

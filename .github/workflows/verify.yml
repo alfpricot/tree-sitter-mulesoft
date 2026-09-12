@@ -21,7 +21,7 @@ name: Verify
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    types: [opened, synchronize, reopened, edited, ready_for_review, converted_to_draft]
   push:
     branches: [dev, main]
 
@@ -235,7 +235,7 @@ jobs:
             exit 1
           }
           printf '%s\n' "$output"
-          if printf '%s\n' "$output" | grep -qE 'ERROR|MISSING'; then
+          if printf '%s\n' "$output" | grep -E 'ERROR|MISSING' > /dev/null; then
             echo '::error::DataWeave fixture parse produced ERROR or MISSING nodes.'
             exit 1
           fi
@@ -250,7 +250,7 @@ jobs:
             exit 1
           }
           printf '%s\n' "$output"
-          if printf '%s\n' "$output" | grep -qE 'ERROR|MISSING'; then
+          if printf '%s\n' "$output" | grep -E 'ERROR|MISSING' > /dev/null; then
             echo '::error::RAML fixture parse produced ERROR or MISSING nodes.'
             exit 1
           fi
@@ -258,6 +258,11 @@ jobs:
 
       - name: Format check
         run: cargo fmt --check
+
+      - name: Test RAML scanner memory safety
+        run: |
+          cc -std=c11 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -I raml/src raml/test/scanner_test.c -o "$RUNNER_TEMP/raml-scanner-test"
+          "$RUNNER_TEMP/raml-scanner-test"
 
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
@@ -370,21 +375,28 @@ jobs:
         with:
           node-version: '24.x'
 
-      - name: Install dependencies and test DataWeave Node binding
+      - name: Install and test published npm package contents
         shell: bash
         run: |
-          cd dataweave
-          npm install
-          npm test
-          cd ..
-
-      - name: Install dependencies and test RAML Node binding
-        shell: bash
-        run: |
-          cd raml
-          npm install
-          npm test
-          cd ..
+          set -euo pipefail
+          npm pack --workspace=dataweave --workspace=raml --pack-destination "$RUNNER_TEMP"
+          consumer="$RUNNER_TEMP/npm-consumer"
+          mkdir -p "$consumer"
+          node --input-type=module - <<'JS'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const allowScripts = { 'tree-sitter@0.25.1': true };
+          for (const grammar of ['dataweave', 'raml']) {
+            const pkg = JSON.parse(fs.readFileSync(`${grammar}/package.json`, 'utf8'));
+            allowScripts[`${pkg.name}@${pkg.version}`] = true;
+          }
+          fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'npm-consumer', 'package.json'),
+            JSON.stringify({ name: 'npm-consumer', private: true, allowScripts }));
+          JS
+          cd "$consumer"
+          npm install tree-sitter@0.25.1 "$RUNNER_TEMP"/tree-sitter-*.tgz
+          npm --prefix node_modules/tree-sitter-dataweave test
+          npm --prefix node_modules/tree-sitter-raml test
 
   workflow-meta:
     name: Workflow and YAML checks

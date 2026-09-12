@@ -90,7 +90,7 @@ jobs:
                 exit 1
               }
               printf '%s\n' "$output"
-              if printf '%s\n' "$output" | grep -qE 'ERROR|MISSING'; then
+              if printf '%s\n' "$output" | grep -E 'ERROR|MISSING' > /dev/null; then
                 echo '::error::Fixture parse contains ERROR or MISSING nodes.'
                 exit 1
               fi
@@ -103,6 +103,13 @@ jobs:
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
           cargo package --workspace
+
+      - name: Test RAML scanner memory safety
+        # Manual retries can check out older tags that predate this test.
+        if: hashFiles('raml/test/scanner_test.c') != ''
+        run: |
+          cc -std=c11 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -I raml/src raml/test/scanner_test.c -o "$RUNNER_TEMP/raml-scanner-test"
+          "$RUNNER_TEMP/raml-scanner-test"
 
       - name: Test Node bindings and package contents
         run: |
