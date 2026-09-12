@@ -138,6 +138,7 @@ jobs:
           set -euo pipefail
           package="tree-sitter-${GRAMMAR}"
           status=$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' \
+            --user-agent "tree-sitter-mulesoft-release (https://github.com/${GITHUB_REPOSITORY})" \
             "https://crates.io/api/v1/crates/${package}/${VERSION}")
           case "$status" in
             200) echo "${package}@${VERSION} is already published" ;;
