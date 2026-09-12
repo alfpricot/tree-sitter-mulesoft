@@ -42,6 +42,7 @@ mime_type
 module_path
 multi_value_expression
 namespace_directive
+namespace_uri
 null
 null_safe_selector
 number
@@ -54,6 +55,7 @@ parameter
 parameter_list
 parenthesized_expression
 parenthesized_type
+qualified_name
 regex
 single_quote_content
 single_quoted_string

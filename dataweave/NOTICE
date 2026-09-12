@@ -1,0 +1,18 @@
+tree-sitter-mulesoft contains two independent tree-sitter grammars: DataWeave
+and RAML.
+
+DataWeave (dataweave/):
+Written from scratch by M. Reifschneider for C. F. Martin & Company.
+
+RAML (raml/):
+The external indentation scanner (raml/src/scanner.c) adapts the scanner from
+tree-sitter-grammars/tree-sitter-yaml (https://github.com/tree-sitter-grammars/tree-sitter-yaml),
+copyright (c) 2020 Ika, licensed under the MIT License. The C symbol names were
+renamed from tree_sitter_yaml_external_scanner_* to tree_sitter_raml_external_scanner_*,
+and the scanner is maintained as pure C.
+
+The repository scaffold (multi-grammar tree-sitter layout, Rust and Node bindings,
+and CI verification workflow) follows the conventions established across Martin
+Guitar grammar repositories (tree-sitter-mssql and tree-sitter-snowflake).
+
+See LICENSE for the full MIT license text.
