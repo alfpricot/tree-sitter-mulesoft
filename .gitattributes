@@ -37,7 +37,7 @@
 *.hpp                    text eol=lf
 *.gyp                    text eol=lf
 *.scm                    text eol=lf
-src/parser.c             linguist-generated=true
+**/src/parser.c          linguist-generated=true
 
 # C# / .NET
 *.cs                     text eol=lf linguist-detectable=true linguist-language=C#
