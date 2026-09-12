@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-mulesoft",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tree-sitter grammars for MuleSoft DataWeave and RAML",
   "private": true,
   "workspaces": [
@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/meloncholic/tree-sitter-mulesoft#readme",
   "devDependencies": {
-    "tree-sitter-cli": "^0.27.0"
+    "tree-sitter-cli": "0.27.0"
   },
   "type": "module"
 }

@@ -28,23 +28,29 @@ jobs:
       - name: Delete caches for closed pull requests and deleted branches
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
         run: |
           set -euo pipefail
-          gh cache list --limit 200 --json id,ref,key,sizeInBytes \
-            --jq '.[] | [.id, .ref, .key, .sizeInBytes] | @tsv' > caches.tsv
+          # Complete every lookup before deleting anything. A failed API call
+          # must never be interpreted as a missing branch or a closed PR.
+          gh api --paginate "repos/$GH_REPO/actions/caches?per_page=100" \
+            --jq '.actions_caches[] | [.id, .ref, .key, .size_in_bytes] | @tsv' > caches.tsv
+          gh api --paginate "repos/$GH_REPO/branches?per_page=100" \
+            --jq '.[].name' > branches.txt
+          gh api --paginate "repos/$GH_REPO/pulls?state=open&per_page=100" \
+            --jq '.[].number' > open-prs.txt
           while IFS=$'\t' read -r id ref key size; do
             [ -z "$id" ] && continue
             stale=false
             case "$ref" in
               refs/pull/*/merge)
                 pr_number=$(echo "$ref" | sed -E 's#refs/pull/([0-9]+)/merge#\1#')
-                state=$(gh pr view "$pr_number" --json state --jq '.state' 2>/dev/null || echo MISSING)
-                [ "$state" != OPEN ] && stale=true
+                grep -Fxq -- "$pr_number" open-prs.txt || stale=true
                 ;;
               refs/heads/*)
                 branch="${ref#refs/heads/}"
-                git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1 || stale=true
+                grep -Fxq -- "$branch" branches.txt || stale=true
                 ;;
             esac
             if [ "$stale" = true ]; then

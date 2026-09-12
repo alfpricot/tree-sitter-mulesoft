@@ -78,4 +78,20 @@ mod tests {
         tree_sitter::Query::new(&LANGUAGE.into(), HIGHLIGHTS_QUERY)
             .expect("RAML highlights must match the exported grammar");
     }
+
+    #[test]
+    fn test_deep_nesting_does_not_overflow_scanner_state() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&LANGUAGE.into()).unwrap();
+        let mut source = String::from("#%RAML 1.0\n");
+        for depth in 0..300 {
+            source.push_str(&"  ".repeat(depth));
+            source.push_str("nested:\n");
+        }
+        source.push_str(&"  ".repeat(300));
+        source.push_str("value: true\n");
+        // Extreme nesting can exceed the saved indentation state, but parsing
+        // must finish without writing past Tree-sitter's serialization buffer.
+        assert!(parser.parse(source, None).is_some());
+    }
 }
