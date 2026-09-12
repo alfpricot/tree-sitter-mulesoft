@@ -49,6 +49,23 @@ const parser = new Parser();
 parser.setLanguage(DataWeave);
 ```
 
+## Releases
+
+The `Release` workflow publishes both grammar crates to crates.io, both unscoped
+packages to npmjs, and `@meloncholic/tree-sitter-dataweave` and
+`@meloncholic/tree-sitter-raml` to GitHub Packages. The workspace root remains private.
+
+Push an existing release commit as a `vMAJOR.MINOR.PATCH` tag, or run the workflow
+manually with an existing tag. Both grammar Cargo manifests must match the tag's
+version. npm versions are set from the tag in the publishing checkouts only.
+The workflow verifies generated parsers, corpus tests, fixtures, Rust packages,
+and Node bindings before any publishing job starts. Each registry skips versions
+already published, and the GitHub Release is created after all packages succeed.
+
+GitHub Actions requires the repository secrets `CARGO_REGISTRY_TOKEN` and
+`NPM_TOKEN`; GitHub Packages uses the workflow's `GITHUB_TOKEN`. npm packages ship
+the generated C parsers and build their native bindings during installation.
+
 ## License
 
 MIT (see [LICENSE](LICENSE) and [NOTICE](NOTICE)).
