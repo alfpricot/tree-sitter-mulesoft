@@ -1,17 +1,12 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import loadBinding from "node-gyp-build";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
-const binding = typeof process.versions.bun === "string"
-  // Support `bun build --compile` by being statically analyzable enough to find the .node file at build-time
-  ? await import(`${root}/prebuilds/${process.platform}-${process.arch}/tree-sitter-dataweave.node`)
-  : (await import("node-gyp-build")).default(root);
+const binding = loadBinding(root);
 
-try {
-  const nodeTypes = await import(`${root}/src/node-types.json`, { with: { type: "json" } });
-  binding.nodeTypeInfo = nodeTypes.default;
-} catch { }
+binding.nodeTypeInfo = JSON.parse(readFileSync(new URL("../../src/node-types.json", import.meta.url), "utf8"));
 
 const queries = [
   ["HIGHLIGHTS_QUERY", `${root}/queries/highlights.scm`],

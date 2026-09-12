@@ -1,5 +1,7 @@
 fn main() {
     let src_dir = std::path::Path::new("src");
+    // The scanner includes schema C files and headers during compilation.
+    println!("cargo:rerun-if-changed={}", src_dir.display());
 
     let mut c_config = cc::Build::new();
     c_config.std("c11").include(src_dir);
