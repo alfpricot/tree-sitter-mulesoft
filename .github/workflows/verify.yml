@@ -21,18 +21,68 @@ name: Verify
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    types: [opened, synchronize, reopened, edited, ready_for_review, converted_to_draft]
   push:
     branches: [dev, main]
 
 permissions:
   contents: read
 
+env:
+  TREE_SITTER_CLI_VERSION: '0.27.0'
+
 concurrency:
   group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Classify changed files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code_changed: ${{ steps.classify.outputs.code_changed }}
+    steps:
+      - name: Checkout history needed for the comparison
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Classify documentation-only changes
+        id: classify
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import subprocess
+
+          base = os.environ['BASE_SHA']
+          head = os.environ['HEAD_SHA']
+          # New branches and unavailable pre-force-push commits need a full run.
+          base_exists = bool(base.strip('0')) and subprocess.run(
+              ['git', 'cat-file', '-e', f'{base}^{{commit}}'],
+              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+          ).returncode == 0
+          changed = subprocess.check_output(
+              ['git', 'diff', '--name-only', '-z', base, head], text=True
+          ).rstrip('\0').split('\0') if base_exists else ['unknown-base']
+          documentation_files = {
+              'README.md', 'CONTRIBUTING.md', 'DESIGN.md',
+              'SECURITY.md',
+          }
+          code_changed = any(
+              path and path not in documentation_files
+              for path in changed
+          )
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write(f'code_changed={str(code_changed).lower()}\n')
+          print('Changed files:')
+          print('\n'.join(changed) if changed else '(none)')
+          print(f'code_changed={str(code_changed).lower()}')
+          PY
+
   pr-title:
     name: PR title
     if: github.event_name == 'pull_request'
@@ -97,11 +147,20 @@ jobs:
           install -m 0755 "$tmp/gitleaks" "$HOME/.local/bin/gitleaks"
 
       - name: Run Gitleaks
-        run: $HOME/.local/bin/gitleaks detect --source . --exit-code 1 --report-format json --report-path gitleaks-report.json
+        run: '"$HOME/.local/bin/gitleaks" detect --no-git --redact --source . --exit-code 1 --report-format json --report-path gitleaks-report.json'
+
+      - name: Upload Gitleaks report on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+          if-no-files-found: ignore
 
   verify:
     name: Grammar, fixtures, Rust build/test
-    if: github.event.pull_request.draft != true
+    needs: changes
+    if: github.event.pull_request.draft != true && needs.changes.outputs.code_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -124,12 +183,13 @@ jobs:
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
       - name: Install the tree-sitter CLI
-        run: npm install --no-save tree-sitter-cli@0.27.0
+        run: npm install --no-save tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }}
+
 
       - name: Regenerate DataWeave parser from grammar.js
         run: |
           cd dataweave
-          npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter generate
+          npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter generate
           cd ..
 
       - name: Fail if DataWeave generated parser is out of date
@@ -138,7 +198,7 @@ jobs:
       - name: Regenerate RAML parser from grammar.js
         run: |
           cd raml
-          npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter generate
+          npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter generate
           cd ..
 
       - name: Fail if RAML generated parser is out of date
@@ -157,25 +217,25 @@ jobs:
       - name: Run DataWeave corpus and highlight tests
         run: |
           cd dataweave
-          npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter test
+          npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter test
           cd ..
 
       - name: Run RAML corpus and highlight tests
         run: |
           cd raml
-          npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter test
+          npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter test
           cd ..
 
       - name: Parse DataWeave fixtures and fail on ERROR/MISSING
         run: |
           set -euo pipefail
           cd dataweave
-          output=$(npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter parse test/fixtures/*.dwl 2>&1) || {
+          output=$(npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter parse test/fixtures/*.dwl 2>&1) || {
             printf '%s\n' "$output"
             exit 1
           }
           printf '%s\n' "$output"
-          if printf '%s\n' "$output" | grep -qE 'ERROR|MISSING'; then
+          if printf '%s\n' "$output" | grep -E 'ERROR|MISSING' > /dev/null; then
             echo '::error::DataWeave fixture parse produced ERROR or MISSING nodes.'
             exit 1
           fi
@@ -185,12 +245,12 @@ jobs:
         run: |
           set -euo pipefail
           cd raml
-          output=$(npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter parse test/fixtures/*.raml 2>&1) || {
+          output=$(npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter parse test/fixtures/*.raml 2>&1) || {
             printf '%s\n' "$output"
             exit 1
           }
           printf '%s\n' "$output"
-          if printf '%s\n' "$output" | grep -qE 'ERROR|MISSING'; then
+          if printf '%s\n' "$output" | grep -E 'ERROR|MISSING' > /dev/null; then
             echo '::error::RAML fixture parse produced ERROR or MISSING nodes.'
             exit 1
           fi
@@ -199,15 +259,74 @@ jobs:
       - name: Format check
         run: cargo fmt --check
 
+      - name: Test RAML scanner memory safety
+        run: |
+          cc -std=c11 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -I raml/src raml/test/scanner_test.c -o "$RUNNER_TEMP/raml-scanner-test"
+          "$RUNNER_TEMP/raml-scanner-test"
+
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Cargo build & test
         run: cargo test
 
+      - name: Verify crate package contents
+        run: |
+          set -euo pipefail
+          for package in tree-sitter-dataweave tree-sitter-raml; do
+            cargo package --list --allow-dirty --package "$package" > "$package-files.txt"
+            grep -qx 'src/parser.c' "$package-files.txt"
+            grep -qx 'queries/highlights.scm' "$package-files.txt"
+            for required in LICENSE NOTICE README.md bindings/rust/build.rs bindings/rust/lib.rs src/tree_sitter/parser.h; do
+              grep -Fxq "$required" "$package-files.txt"
+            done
+            if [ "$package" = tree-sitter-raml ]; then
+              for required in src/scanner.c src/schema.core.c src/schema.json.c src/schema.legacy.c; do
+                grep -Fxq "$required" "$package-files.txt"
+              done
+            fi
+            if grep -qE '^(\.git|\.worktrees|node_modules|target)[/\\]' "$package-files.txt"; then
+              echo "::error::$package includes development-only files."
+              exit 1
+            fi
+          done
+
+      - name: Verify npm package contents
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json --workspace=dataweave --workspace=raml > npm-pack.json
+          node --input-type=module - <<'JS'
+          import fs from 'node:fs';
+
+          const result = JSON.parse(fs.readFileSync('npm-pack.json', 'utf8'));
+          const packages = Array.isArray(result) ? result : Object.values(result);
+          const names = packages.map((pkg) => pkg.name).sort();
+          if (JSON.stringify(names) !== JSON.stringify(['tree-sitter-dataweave', 'tree-sitter-raml'])) {
+            throw new Error('Expected exactly the DataWeave and RAML packages');
+          }
+          for (const pkg of packages) {
+            const paths = pkg.files.map((file) => file.path);
+            const requiredFiles = ['src/parser.c', 'src/tree_sitter/parser.h', 'queries/highlights.scm',
+              'LICENSE', 'NOTICE', 'README.md', 'package.json', 'binding.gyp',
+              'bindings/node/index.js', 'bindings/node/index.d.ts', 'bindings/node/binding.cc'];
+            if (pkg.name === 'tree-sitter-raml') {
+              requiredFiles.push('src/scanner.c', 'src/schema.core.c', 'src/schema.json.c', 'src/schema.legacy.c');
+            }
+            for (const required of requiredFiles) {
+              if (!paths.includes(required)) {
+                throw new Error(`${pkg.name} is missing ${required}`);
+              }
+            }
+            if (paths.some((path) => /^(?:\.git|\.worktrees|node_modules|target)\//.test(path))) {
+              throw new Error(`${pkg.name} includes development-only files`);
+            }
+          }
+          JS
+
   consumer-pin:
     name: Rust build/test against tree-sitter 0.26 (the consumers' pin)
-    if: github.event.pull_request.draft != true
+    needs: changes
+    if: github.event.pull_request.draft != true && needs.changes.outputs.code_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -236,12 +355,17 @@ jobs:
           cargo test
 
   node-binding:
-    name: Node binding build/test
-    if: github.event.pull_request.draft != true
-    runs-on: ubuntu-latest
+    name: Node binding build/test (${{ matrix.os }})
+    needs: changes
+    if: github.event.pull_request.draft != true && needs.changes.outputs.code_changed == 'true'
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -251,19 +375,28 @@ jobs:
         with:
           node-version: '24.x'
 
-      - name: Install dependencies and test DataWeave Node binding
+      - name: Install and test published npm package contents
+        shell: bash
         run: |
-          cd dataweave
-          npm install
-          npm test
-          cd ..
-
-      - name: Install dependencies and test RAML Node binding
-        run: |
-          cd raml
-          npm install
-          npm test
-          cd ..
+          set -euo pipefail
+          npm pack --workspace=dataweave --workspace=raml --pack-destination "$RUNNER_TEMP"
+          consumer="$RUNNER_TEMP/npm-consumer"
+          mkdir -p "$consumer"
+          node --input-type=module - <<'JS'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const allowScripts = { 'tree-sitter@0.25.1': true };
+          for (const grammar of ['dataweave', 'raml']) {
+            const pkg = JSON.parse(fs.readFileSync(`${grammar}/package.json`, 'utf8'));
+            allowScripts[`${pkg.name}@${pkg.version}`] = true;
+          }
+          fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'npm-consumer', 'package.json'),
+            JSON.stringify({ name: 'npm-consumer', private: true, allowScripts }));
+          JS
+          cd "$consumer"
+          npm install tree-sitter@0.25.1 "$RUNNER_TEMP"/tree-sitter-*.tgz
+          npm --prefix node_modules/tree-sitter-dataweave test
+          npm --prefix node_modules/tree-sitter-raml test
 
   workflow-meta:
     name: Workflow and YAML checks
@@ -276,6 +409,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify tree-sitter CLI version consistency
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          expected = os.environ['TREE_SITTER_CLI_VERSION']
+          manifest = json.loads(Path('package.json').read_text())
+          if manifest['devDependencies']['tree-sitter-cli'] != expected:
+              raise SystemExit('package.json: inconsistent CLI version')
+          for name in ('verify', 'release'):
+              text = Path(f'.github/workflows/{name}.yml').read_text()
+              versions = re.findall(r"^  TREE_SITTER_CLI_VERSION: '([0-9]+\.[0-9]+\.[0-9]+)'$", text, re.MULTILINE)
+              if versions != [expected]:
+                  raise SystemExit(f'{name}.yml: inconsistent CLI version')
+          for name in ('dataweave/package.json', 'raml/package.json', 'CONTRIBUTING.md'):
+              versions = re.findall(r'tree-sitter-cli@v?([0-9]+\.[0-9]+\.[0-9]+)', Path(name).read_text())
+              if not versions or any(version != expected for version in versions):
+                  raise SystemExit(f'{name}: inconsistent CLI version')
+          PY
 
       - name: Cache actionlint
         id: cache-actionlint
@@ -302,7 +458,7 @@ jobs:
           install -m 0755 "$tmp/actionlint" "$HOME/.local/bin/actionlint"
 
       - name: Run actionlint
-        run: $HOME/.local/bin/actionlint -color -ignore 'SC[0-9]+:(info|style):'
+        run: '"$HOME/.local/bin/actionlint" -color -ignore ''SC[0-9]+:(info|style):'''
 
       - name: Validate YAML files
         run: |
@@ -333,7 +489,7 @@ jobs:
 
   ci:
     name: ${{ github.event_name == 'pull_request' && 'Verify' || 'Verify (push)' }}
-    needs: [verify, consumer-pin, node-binding, secret-scanning, pr-title, workflow-meta]
+    needs: [changes, verify, consumer-pin, node-binding, secret-scanning, pr-title, workflow-meta]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -351,3 +507,32 @@ jobs:
             echo '::error::One or more required jobs failed or were cancelled.'
             exit 1
           fi
+
+      - name: Fail if any job was unexpectedly skipped
+        env:
+          NEEDS_JSON: ${{ toJson(needs) }}
+          IS_PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
+          IS_DRAFT: ${{ github.event.pull_request.draft == true }}
+          CODE_CHANGED: ${{ needs.changes.outputs.code_changed }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          needs = json.loads(os.environ['NEEDS_JSON'])
+          allowed = set()
+          if os.environ['IS_PULL_REQUEST'] != 'true':
+              allowed.add('pr-title')
+          if os.environ['CODE_CHANGED'] not in ('true', 'false'):
+              raise SystemExit('::error::Missing or invalid change classification')
+          if os.environ['IS_DRAFT'] == 'true' or os.environ['CODE_CHANGED'] == 'false':
+              allowed.update(('verify', 'consumer-pin', 'node-binding'))
+          unexpected = [
+              name for name, result in needs.items()
+              if result['result'] == 'skipped' and name not in allowed
+          ]
+          if unexpected:
+              raise SystemExit(
+                  f'::error::Unexpectedly skipped required jobs: {", ".join(unexpected)}'
+              )
+          PY

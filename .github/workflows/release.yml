@@ -19,6 +19,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  TREE_SITTER_CLI_VERSION: '0.27.0'
+
 jobs:
   verify:
     name: Verify before publishing
@@ -78,16 +81,16 @@ jobs:
           for grammar in dataweave raml; do
             (
               cd "$grammar"
-              npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter generate
+              npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter generate
               node test/generate-node-kinds.mjs
               git diff --exit-code -- src/parser.c src/grammar.json src/node-types.json test/node-kinds.txt
-              npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter test
-              output=$(npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter parse test/fixtures/* 2>&1) || {
+              npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter test
+              output=$(npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter parse test/fixtures/* 2>&1) || {
                 printf '%s\n' "$output"
                 exit 1
               }
               printf '%s\n' "$output"
-              if printf '%s\n' "$output" | grep -qE 'ERROR|MISSING'; then
+              if printf '%s\n' "$output" | grep -E 'ERROR|MISSING' > /dev/null; then
                 echo '::error::Fixture parse contains ERROR or MISSING nodes.'
                 exit 1
               fi
@@ -100,6 +103,13 @@ jobs:
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
           cargo package --workspace
+
+      - name: Test RAML scanner memory safety
+        # Manual retries can check out older tags that predate this test.
+        if: hashFiles('raml/test/scanner_test.c') != ''
+        run: |
+          cc -std=c11 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -I raml/src raml/test/scanner_test.c -o "$RUNNER_TEMP/raml-scanner-test"
+          "$RUNNER_TEMP/raml-scanner-test"
 
       - name: Test Node bindings and package contents
         run: |
@@ -154,6 +164,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -196,6 +207,8 @@ jobs:
         working-directory: ${{ matrix.grammar }}
         env:
           NODE_AUTH_TOKEN: ${{ matrix.registry == 'github' && github.token || secrets.NPM_TOKEN }}
+          VERIFIED_REVISION: ${{ needs.verify.outputs.revision }}
+          VERIFIED_TAG: ${{ needs.verify.outputs.tag }}
         run: |
           set -euo pipefail
           package=$(node -p 'require("./package.json").name')
@@ -208,7 +221,19 @@ jobs:
               const result = require(process.argv[1]);
               if (result.error?.code !== "E404") process.exit(1);
             ' "$RUNNER_TEMP/published.json"
-            npm publish --access public --registry "$REGISTRY" --workspaces=false
+            # npm attests the triggering ref/SHA, not the checked-out tree.
+            # Retrying an older tag from a repaired main workflow must not
+            # attach provenance for main's source to that older package.
+            if [ "$REGISTRY" = 'https://registry.npmjs.org/' ] && \
+               [ "$GITHUB_SHA" = "$VERIFIED_REVISION" ] && \
+               [ "$GITHUB_REF" = "refs/tags/$VERIFIED_TAG" ]; then
+              npm publish --access public --provenance --registry "$REGISTRY" --workspaces=false
+            else
+              if [ "$REGISTRY" = 'https://registry.npmjs.org/' ]; then
+                echo '::notice::Cross-ref release retry: publishing without automatic provenance.'
+              fi
+              npm publish --access public --registry "$REGISTRY" --workspaces=false
+            fi
           fi
 
   github-release:
