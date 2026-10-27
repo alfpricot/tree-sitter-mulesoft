@@ -33,7 +33,7 @@ permissions:
   contents: read
 
 env:
-  TREE_SITTER_CLI_VERSION: '0.27.0'
+  TREE_SITTER_CLI_VERSION: '0.27.1'
 
 concurrency:
   group: verify-${{ github.workflow }}-${{ github.ref }}
