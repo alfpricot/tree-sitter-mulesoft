@@ -13,7 +13,7 @@ Two tree-sitter grammars, DataWeave and RAML, with Rust and Node.js bindings.
 You need Rust 1.85 or later, a C compiler (`gcc` or `clang`), and Node.js 24. From the repository root, install the dev dependencies and the tree-sitter CLI version CI uses, without changing `package.json`:
 
 ```bash
-npm install --no-save tree-sitter-cli@0.27.0
+npm install --no-save tree-sitter-cli@0.27.1
 ```
 
 Each package's `install` script (`node-gyp-build`) uses a prebuilt native addon when one exists and otherwise compiles the addon with `node-gyp`, which needs a C++ toolchain; an install on a machine without one fails at that step.
@@ -21,8 +21,8 @@ Each package's `install` script (`node-gyp-build`) uses a prebuilt native addon 
 The generated parser files (`src/parser.c`, `src/grammar.json`, and `src/node-types.json`) are committed for each grammar. Regenerate and commit their diffs after changing either `grammar.js`. A failed generation leaves the previous parser in place, so verify that the command succeeds before trusting a test result.
 
 ```bash
-cd dataweave && npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter generate
-cd ../raml && npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter generate
+cd dataweave && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter generate
+cd ../raml && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter generate
 ```
 
 ## Validation before a pull request
@@ -40,8 +40,8 @@ CC=gcc CXX=g++ cargo test
 Corpus suites, plus a refresh of each node-kind snapshot after a grammar change:
 
 ```bash
-cd dataweave && npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter test && node test/generate-node-kinds.mjs
-cd ../raml && npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter test && node test/generate-node-kinds.mjs
+cd dataweave && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter test && node test/generate-node-kinds.mjs
+cd ../raml && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter test && node test/generate-node-kinds.mjs
 ```
 
 `dataweave/test/corpus/` and `raml/test/corpus/` contain focused tree assertions. The fixtures in each `test/fixtures/` are larger real-shaped samples and must parse without `ERROR` or `MISSING` nodes.
