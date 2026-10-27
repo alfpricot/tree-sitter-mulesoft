@@ -1,29 +1,39 @@
 # tree-sitter-mulesoft
 
-Tree-sitter grammars for MuleSoft integration file formats:
-- **DataWeave** (`.dwl`) — Transformation and mapping language (`tree-sitter-dataweave`).
-- **RAML** (`.raml`) — RESTful API Modeling Language specification format (`tree-sitter-raml`).
+[![Verify](https://github.com/alfpricot/tree-sitter-mulesoft/actions/workflows/verify.yml/badge.svg?branch=dev)](https://github.com/alfpricot/tree-sitter-mulesoft/actions/workflows/verify.yml)
+[![crates.io: tree-sitter-dataweave](https://img.shields.io/crates/v/tree-sitter-dataweave?label=tree-sitter-dataweave)](https://crates.io/crates/tree-sitter-dataweave)
+[![crates.io: tree-sitter-raml](https://img.shields.io/crates/v/tree-sitter-raml?label=tree-sitter-raml)](https://crates.io/crates/tree-sitter-raml)
 
-## Architecture
+Two [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars for MuleSoft file formats, kept in one repository and released together: DataWeave (`.dwl`), the transformation and mapping language, and RAML (`.raml`), the RESTful API Modeling Language. Each grammar ships as a Rust crate and a Node.js package with the generated C parser, so an editor, linter, or code-analysis tool can parse these files without MuleSoft's own tooling.
 
-This repository holds two independent tree-sitter grammars:
+| Grammar | Directory | C symbol | npm package | Rust crate |
+| --- | --- | --- | --- | --- |
+| DataWeave | [`dataweave/`](dataweave/) | `tree_sitter_dataweave` | `tree-sitter-dataweave` | `tree-sitter-dataweave` |
+| RAML | [`raml/`](raml/) | `tree_sitter_raml` | `tree-sitter-raml` | `tree-sitter-raml` |
 
-| Grammar | Subdirectory | C Symbol | NPM Package | Rust Crate |
-|---|---|---|---|---|
-| DataWeave | `dataweave/` | `tree_sitter_dataweave` | `tree-sitter-dataweave` | `tree-sitter-dataweave` |
-| RAML | `raml/` | `tree_sitter_raml` | `tree-sitter-raml` | `tree-sitter-raml` |
+## Installation
+
+Rust:
+
+```bash
+cargo add tree-sitter-dataweave tree-sitter-raml
+```
+
+Node.js:
+
+```bash
+npm install tree-sitter-dataweave tree-sitter-raml
+```
+
+### Requirements
+
+- Rust 1.85 or later (the `rust-version` in each crate's `Cargo.toml`).
+- Node.js with the `tree-sitter` package version 0.25 or later, which each npm package lists as an optional peer dependency.
+- The npm packages ship prebuilt native addons for Linux and Windows. On another platform, installation compiles the addon from source with `node-gyp`, which needs a C toolchain.
 
 ## Usage
 
-### Rust
-
-Add the respective grammar crate to your `Cargo.toml`:
-
-```toml
-[dependencies]
-tree-sitter-dataweave = "0.1"
-tree-sitter-raml = "0.1"
-```
+Rust:
 
 ```rust
 use tree_sitter::Parser;
@@ -33,13 +43,7 @@ parser.set_language(&tree_sitter_dataweave::LANGUAGE.into())?;
 let tree = parser.parse("%dw 2.0\noutput application/json\n---\n{ key: 'value' }", None)?;
 ```
 
-### Node.js
-
-Install the packages:
-
-```bash
-npm install tree-sitter-dataweave tree-sitter-raml
-```
+Node.js:
 
 ```javascript
 import Parser from "tree-sitter";
@@ -49,22 +53,11 @@ const parser = new Parser();
 parser.setLanguage(DataWeave);
 ```
 
-## Releases
+The RAML grammar loads the same way from `tree-sitter-raml` and `tree_sitter_raml`. Each directory's own README lists the syntax that grammar covers.
 
-The `Release` workflow publishes both grammar crates to crates.io, both unscoped
-packages to npmjs, and `@meloncholera/tree-sitter-dataweave` and
-`@meloncholera/tree-sitter-raml` to GitHub Packages. The workspace root remains private.
+## How to contribute
 
-Push an existing release commit as a `vMAJOR.MINOR.PATCH` tag, or run the workflow
-manually with an existing tag. Both grammar Cargo manifests must match the tag's
-version. npm versions are set from the tag in the publishing checkouts only.
-The workflow verifies generated parsers, corpus tests, fixtures, Rust packages,
-and Node bindings before any publishing job starts. Each registry skips versions
-already published, and the GitHub Release is created after all packages succeed.
-
-GitHub Actions requires the repository secrets `CARGO_REGISTRY_TOKEN` and
-`NPM_TOKEN`; GitHub Packages uses the workflow's `GITHUB_TOKEN`. npm packages ship
-the generated C parsers and build their native bindings during installation.
+Branch from `dev`, regenerate and commit the parser files after any `grammar.js` change, and run the Rust, corpus, and lint checks before opening a pull request against `dev`. [CONTRIBUTING.md](CONTRIBUTING.md) has the commands, [ARCHITECTURE.md](ARCHITECTURE.md) explains how the repository is laid out, and [docs/RELEASING.md](docs/RELEASING.md) covers how a release is published.
 
 ## License
 
