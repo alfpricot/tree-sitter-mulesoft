@@ -1,0 +1,52 @@
+# Both grammar packages (dataweave, raml) release in lockstep under one
+# v<version> tag, so this is a single "app". The root Cargo.toml is a virtual
+# workspace whose [workspace.package] version both crates inherit; gala's cargo
+# manager bumps that version and writes the same version into every
+# package.json and tree-sitter.json listed below. The postBump hook then
+# regenerates both parsers, which embed the tree-sitter.json version, so the
+# release commit is exactly what release.yml publishes. No lockfile is
+# committed in this repository, so there is none for gala to refresh.
+kind = "app"
+manager = "cargo"
+# release.yml publishes to the registries and creates the GitHub Release.
+publish = false
+githubRelease = false
+releaseBranches = ["main"]
+syncBranch = "dev"
+tagPrefix = "v"
+changelog = "CHANGELOG.md"
+remote = "origin"
+# The root build script runs tree-sitter generate in each grammar directory.
+postBump = ["npm run build"]
+postBumpPaths = [
+  "dataweave/src/parser.c",
+  "dataweave/src/grammar.json",
+  "dataweave/src/node-types.json",
+  "raml/src/parser.c",
+  "raml/src/grammar.json",
+  "raml/src/node-types.json",
+]
+
+[[versionFile]]
+path = "package.json"
+key = "version"
+
+[[versionFile]]
+path = "tree-sitter.json"
+key = "metadata.version"
+
+[[versionFile]]
+path = "dataweave/package.json"
+key = "version"
+
+[[versionFile]]
+path = "dataweave/tree-sitter.json"
+key = "metadata.version"
+
+[[versionFile]]
+path = "raml/package.json"
+key = "version"
+
+[[versionFile]]
+path = "raml/tree-sitter.json"
+key = "metadata.version"

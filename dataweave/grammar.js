@@ -275,7 +275,11 @@ export default grammar({
       prec(PREC.LAMBDA, choice($.qualified_name, $.identifier, $.string, $.number)),
 
     // --- Array literal ---
-    array: ($) => seq('[', repeat(seq($._expression, optional(','))), ']'),
+    // Elements need a separating comma. With the comma optional, a `/` after
+    // an element could open a new element, so the lexer read `[a / 2, b / 3]`
+    // as `a`, the regex `/ 2, b /`, and `3` instead of two divisions.
+    array: ($) =>
+      seq('[', optional(seq($._expression, repeat(seq(',', $._expression)), optional(','))), ']'),
 
     // --- Literals ---
     boolean: (_) => choice('true', 'false'),
