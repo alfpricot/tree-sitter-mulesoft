@@ -9,9 +9,9 @@
     "prestart": "npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter build --wasm",
     "start": "npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter playground",
     "test": "node --test bindings/node/*_test.js",
-    "lint": "eslint grammar.js \"test/*.mjs\" \"bindings/node/*.js\"",
-    "format": "prettier --write grammar.js \"test/*.mjs\" \"bindings/node/*.js\"",
-    "format:check": "prettier --check grammar.js \"test/*.mjs\" \"bindings/node/*.js\""
+    "lint": "oxlint -c ../.oxlintrc.json grammar.js test bindings/node",
+    "format": "oxfmt -c ../.oxfmtrc.json grammar.js \"test/*.mjs\" \"bindings/node/*.js\"",
+    "format:check": "oxfmt --check -c ../.oxfmtrc.json grammar.js \"test/*.mjs\" \"bindings/node/*.js\""
   },
   "author": "M. Reifschneider",
   "license": "MIT",

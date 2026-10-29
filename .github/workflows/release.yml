@@ -1,5 +1,14 @@
 # Publish both grammar packages from an existing vX.Y.Z tag. The private
 # workspace root is never published. Reruns skip versions already in a registry.
+#
+# The tag comes from gala-release.yml. gala's release commit carries the tag's
+# version in the root Cargo.toml's [workspace.package] (which both crates
+# inherit), every package.json, and every tree-sitter.json, with both parsers
+# regenerated, so this workflow publishes the tagged files as committed. The
+# release commit's skip-ci marker may suppress the tag-push trigger below, so
+# gala-release.yml also dispatches this workflow on the tag; whichever run
+# starts second skips what is already published.
+#
 # Each npm package ships prebuilt native addons (Linux and Windows, Node-API)
 # built by the prebuild matrix job, so installs need no C toolchain; the
 # node-gyp-build install script prefers a matching prebuild and falls back to a
@@ -51,6 +60,7 @@ jobs:
           python3 - <<'PY'
           import os
           import re
+          import subprocess
           import tomllib
           from pathlib import Path
 
@@ -58,10 +68,17 @@ jobs:
           if not re.fullmatch(r'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', tag):
               raise SystemExit('Release tags must use vMAJOR.MINOR.PATCH')
           version = tag[1:]
-          for grammar in ('dataweave', 'raml'):
-              manifest = tomllib.loads(Path(grammar, 'Cargo.toml').read_text())
-              if manifest['package']['version'] != version:
-                  raise SystemExit(f'{grammar}/Cargo.toml must match {tag}')
+          if Path('tools/release-versions.mjs').exists():
+              # Every manifest, package.json, and tree-sitter.json must carry
+              # the tag's version.
+              subprocess.run(['node', 'tools/release-versions.mjs', tag], check=True)
+          else:
+              # Manual retries can check out older tags, cut before the
+              # crates inherited one workspace version.
+              for grammar in ('dataweave', 'raml'):
+                  manifest = tomllib.loads(Path(grammar, 'Cargo.toml').read_text())
+                  if manifest['package']['version'] != version:
+                      raise SystemExit(f'{grammar}/Cargo.toml must match {tag}')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write(f'version={version}\ntag={tag}\n')
           PY

@@ -6,8 +6,7 @@
 #  Type                Entrypoint (runs in this repo only)
 #  Triggers            pull_request
 #                      push (dev, main)
-#                      workflow_dispatch (release-plz and sync branches, whose
-#                      GITHUB_TOKEN pushes never start a pull_request run)
+#                      workflow_dispatch (manual runs)
 #  Purpose             Regenerate the parsers from grammar.js, fail on any
 #                      drift in the generated parsers or the committed
 #                      node-kind snapshots, run the tree-sitter corpus and
@@ -197,6 +196,11 @@ jobs:
 
       - name: Test the release scripts
         run: node --test tools/*.test.mjs
+
+      - name: Check every version file agrees
+        # gala refuses to plan a release when they disagree; failing here
+        # catches the drift on the pull request instead of on main.
+        run: node tools/release-versions.mjs
 
       - name: Regenerate DataWeave parser from grammar.js
         run: |
@@ -434,7 +438,7 @@ jobs:
           manifest = json.loads(Path('package.json').read_text())
           if manifest['devDependencies']['tree-sitter-cli'] != expected:
               raise SystemExit('package.json: inconsistent CLI version')
-          for name in ('verify', 'release', 'release-plz'):
+          for name in ('verify', 'release'):
               text = Path(f'.github/workflows/{name}.yml').read_text()
               versions = re.findall(r"^  TREE_SITTER_CLI_VERSION: '([0-9]+\.[0-9]+\.[0-9]+)'$", text, re.MULTILINE)
               if versions != [expected]:
