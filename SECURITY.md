@@ -12,6 +12,6 @@ This policy covers the `tree-sitter-dataweave` and `tree-sitter-raml` grammars i
 
 ## Practices
 
-- No credentials in the repository: pull request checks scan the working tree for secrets, and publishing tokens live only in the repository's Actions secrets.
+- No credentials in the repository: pull request checks scan the working tree and the Git history for secrets, and publishing tokens live only in the repository's Actions secrets.
 - Parser files are generated from `grammar.js` and checked in CI, so a committed parser always matches its grammar source.
 - Dependabot proposes dependency updates (`.github/dependabot.yml`).
