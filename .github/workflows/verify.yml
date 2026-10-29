@@ -158,6 +158,10 @@ jobs:
 
       - name: Scan Git history with Gitleaks
         id: gitleaks-history
+        # The two scans are independent: run the history scan even when the
+        # tree scan failed, so the upload below gets both reports. Skipped
+        # when a setup step failed before the tree scan could start.
+        if: always() && steps.gitleaks-tree.outcome != 'skipped'
         run: '"$HOME/.local/bin/gitleaks" detect --redact --source . --exit-code 1 --report-format json --report-path gitleaks-history-report.json'
 
       - name: Upload Gitleaks reports on failure
