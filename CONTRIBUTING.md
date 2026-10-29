@@ -46,7 +46,7 @@ cd ../raml && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter test && 
 
 `dataweave/test/corpus/` and `raml/test/corpus/` contain focused tree assertions. The fixtures in each `test/fixtures/` are larger real-shaped samples and must parse without `ERROR` or `MISSING` nodes.
 
-JavaScript lint and format (each package's `grammar.js`, `test/*.mjs`, and `bindings/node/*.js`). ESLint and Prettier are installed once at the repository root, and the Prettier settings live under the `prettier` key of the root `package.json`. The root scripts run the matching script in each package, and each package also has its own `lint`, `format`, and `format:check` scripts that can be run from inside `dataweave/` or `raml/`. Each package carries its own copy of `eslint.config.js` so a package lints the same way standalone as it does from the root.
+JavaScript lint and format (each package's `grammar.js`, `test/*.mjs`, and `bindings/node/*.js`). oxlint and oxfmt are installed once at the repository root and configured by the root `.oxlintrc.json` and `.oxfmtrc.json`. The root scripts cover both packages and `tools/*.mjs`, and each package also has its own `lint`, `format`, and `format:check` scripts that can be run from inside `dataweave/` or `raml/` and point at the root configs.
 
 ```bash
 npm run lint
