@@ -189,3 +189,30 @@ if (payload.status == "ACTIVE") {
           (string
             (double_quoted_string
               (string_content))))))))
+
+==================
+Division inside array elements
+==================
+
+---
+[a / 2, b / 3, [c / 4, d / 5], /x/, 1,]
+
+---
+
+(document
+  (array
+    (binary_expression
+      (identifier)
+      (number))
+    (binary_expression
+      (identifier)
+      (number))
+    (array
+      (binary_expression
+        (identifier)
+        (number))
+      (binary_expression
+        (identifier)
+        (number)))
+    (regex)
+    (number)))
