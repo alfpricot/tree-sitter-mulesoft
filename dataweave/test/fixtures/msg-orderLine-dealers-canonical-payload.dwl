@@ -3,7 +3,7 @@ output application/json skipNullOn="everywhere"
 import * from dw::core::Strings
 ---
 { 
-  "Action": if (vars.dealerPayload.CFM_Row_Pointer__c == null) "Insert" else if (vars.dealerPayload.CFM_Row_Pointer__c__c != "null") "Update" else if (vars.info.operation == "DELETE") "Delete" else vars.info.operation ,	
+  "Action": if (vars.dealerPayload.ERP_Row_Pointer__c == null) "Insert" else if (vars.dealerPayload.ERP_Row_Pointer__c__c != "null") "Update" else if (vars.info.operation == "DELETE") "Delete" else vars.info.operation ,	
   "Object": vars.info.object,
   "Id": vars.info.salesforceId,
   "Records": [
