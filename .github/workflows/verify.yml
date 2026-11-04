@@ -375,8 +375,8 @@ jobs:
         with:
           key: consumer-pin
 
-      # The consumers are not on the same pin: cadence declares
-      # tree-sitter = "0.26", marlin "0.27". The verify job above covers 0.27
+      # Downstream consumers are not on the same pin: some declare
+      # tree-sitter = "0.26", others "0.27". The verify job above covers 0.27
       # (the dev-dependency in each grammar's Cargo.toml); this job covers the
       # lower bound, so the generated parsers are proven against both.
       - name: Pin tree-sitter to 0.26 and test
