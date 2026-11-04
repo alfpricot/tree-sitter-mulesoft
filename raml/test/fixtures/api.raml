@@ -1,10 +1,10 @@
 #%RAML 1.0
-title: cfmartin-syteline-salesforce-prc-api
+title: erp-crm-sync-api
 
 protocols: [HTTP,HTTPS]
 
 /sync/{object}:
-  description: Upserts syteline object records dynamically into the salesforce
+  description: Upserts ERP object records dynamically into the CRM
   uriParameters:
     object:
       enum:
