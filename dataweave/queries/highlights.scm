@@ -30,6 +30,7 @@
 ; Keywords
 [
   "if"
+  "unless"
   "else"
   "match"
   "case"
@@ -74,6 +75,8 @@
 (member_expression property: (identifier) @property)
 (descendant_expression property: (identifier) @property)
 (multi_value_expression property: (identifier) @property)
+(multi_descendant_expression property: (identifier) @property)
+(metadata_expression property: (identifier) @property)
 
 ; Parameters & Variables
 (parameter name: (identifier) @variable.parameter)

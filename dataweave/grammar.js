@@ -92,12 +92,19 @@ export default grammar({
       ),
 
     var_directive: ($) =>
-      seq(choice('%var', 'var'), field('name', $.identifier), '=', field('value', $._expression)),
+      seq(
+        choice('%var', 'var'),
+        field('name', $.identifier),
+        optional(seq(':', field('type', $._type))),
+        '=',
+        field('value', $._expression),
+      ),
 
     fun_directive: ($) =>
       seq(
         choice('%fun', '%function', 'fun'),
         field('name', $.identifier),
+        optional(field('type_parameters', $.type_parameters)),
         '(',
         optional($.parameter_list),
         ')',
@@ -107,7 +114,19 @@ export default grammar({
       ),
 
     type_directive: ($) =>
-      seq(choice('%type', 'type'), field('name', $.identifier), '=', field('type', $._type)),
+      seq(
+        choice('%type', 'type'),
+        field('name', $.identifier),
+        optional(field('type_parameters', $.type_parameters)),
+        '=',
+        field('type', $._type),
+      ),
+
+    type_parameters: ($) => seq('<', commaSep1($.type_parameter), '>'),
+
+    // `T`, or `T <: Bound` for a bounded parameter.
+    type_parameter: ($) =>
+      seq(field('name', $.identifier), optional(seq('<:', field('bound', $._type)))),
 
     namespace_directive: ($) =>
       seq(
@@ -222,15 +241,19 @@ export default grammar({
         $.is_expression,
         $.default_expression,
         $.if_expression,
+        $.unless_expression,
         $.match_expression,
         $.do_expression,
         $.lambda_expression,
         $.call_expression,
         $.member_expression,
         $.descendant_expression,
+        $.multi_descendant_expression,
         $.multi_value_expression,
         $.attribute_expression,
         $.key_expression,
+        $.metadata_expression,
+        $.namespace_expression,
         $.null_safe_selector,
         $.index_expression,
         $.filter_selector_expression,
@@ -366,11 +389,7 @@ export default grammar({
     default_expression: ($) =>
       prec.right(
         PREC.DEFAULT,
-        seq(
-          field('expression', $._expression),
-          choice('default', '?:'),
-          field('default', $._expression),
-        ),
+        seq(field('expression', $._expression), 'default', field('default', $._expression)),
       ),
 
     // --- Control Flow ---
@@ -379,6 +398,20 @@ export default grammar({
         PREC.IF,
         seq(
           'if',
+          '(',
+          field('condition', $._expression),
+          ')',
+          field('consequence', $._expression),
+          'else',
+          field('alternative', $._expression),
+        ),
+      ),
+
+    unless_expression: ($) =>
+      prec.right(
+        PREC.IF,
+        seq(
+          'unless',
           '(',
           field('condition', $._expression),
           ')',
@@ -405,6 +438,7 @@ export default grammar({
       seq(
         'case',
         choice(
+          field('pattern', choice($.array_pattern, $.object_pattern)),
           seq(
             optional(seq(field('variable', $.identifier), ':')),
             field('pattern', choice($.string, $.number, $.boolean, $.null)),
@@ -422,6 +456,26 @@ export default grammar({
         ),
         '->',
         field('consequence', $._expression),
+      ),
+
+    // `[]` and `[head ~ tail]`.
+    array_pattern: ($) =>
+      seq('[', optional(seq(field('head', $.identifier), '~', field('tail', $.identifier))), ']'),
+
+    // `{}` and `{ key: value ~ rest }`.
+    object_pattern: ($) =>
+      seq(
+        '{',
+        optional(
+          seq(
+            field('key', choice($.identifier, $.string)),
+            ':',
+            field('value', $.identifier),
+            '~',
+            field('rest', $.identifier),
+          ),
+        ),
+        '}',
       ),
 
     match_else: ($) =>
@@ -480,6 +534,16 @@ export default grammar({
         ),
       ),
 
+    multi_descendant_expression: ($) =>
+      prec.left(
+        PREC.SELECTOR,
+        seq(
+          field('object', $._expression),
+          '..*',
+          field('property', choice($.identifier, $.string, $.qualified_name)),
+        ),
+      ),
+
     multi_value_expression: ($) =>
       prec.left(
         PREC.SELECTOR,
@@ -493,12 +557,31 @@ export default grammar({
     attribute_expression: ($) =>
       prec.left(
         PREC.SELECTOR,
-        seq(
-          field('object', $._expression),
-          choice('.@', '@'),
-          field('attribute', choice($.identifier, $.string, $.qualified_name)),
+        choice(
+          seq(
+            field('object', $._expression),
+            choice('.@', '@'),
+            field('attribute', choice($.identifier, $.string, $.qualified_name)),
+          ),
+          // A bare `.@` selects every attribute of the value. It ranks below
+          // the named form so `x.@id` reads `id` as the attribute name.
+          prec(PREC.SELECTOR - 1, seq(field('object', $._expression), '.@')),
         ),
       ),
+
+    metadata_expression: ($) =>
+      prec.left(
+        PREC.SELECTOR,
+        seq(
+          field('object', $._expression),
+          '.^',
+          field('property', choice($.identifier, $.string)),
+        ),
+      ),
+
+    // `.#` selects the namespace of a key.
+    namespace_expression: ($) =>
+      prec.left(PREC.SELECTOR, seq(field('object', $._expression), '.#')),
 
     key_expression: ($) =>
       prec.left(
@@ -516,7 +599,7 @@ export default grammar({
         choice(
           seq(
             field('object', $._expression),
-            choice('?.', '.?'),
+            '.?',
             field('property', choice($.identifier, $.string)),
           ),
           seq(field('object', $._expression), '?'),
