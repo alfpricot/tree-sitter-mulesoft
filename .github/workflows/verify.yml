@@ -11,8 +11,8 @@
 #                      drift in the generated parsers or the committed
 #                      node-kind snapshots, run the tree-sitter corpus and
 #                      highlight tests, parse fixtures, build and test the
-#                      Rust bindings (against the lowest supported
-#                      tree-sitter version, and against the latest), build and test
+#                      Rust bindings (against the lowest tree-sitter version
+#                      tested, and against the latest), build and test
 #                      the Node bindings, validate the PR title, scan the
 #                      working tree and Git history for secrets, lint and
 #                      format-check the JavaScript sources, and lint
@@ -353,8 +353,8 @@ jobs:
           }
           JS
 
-  abi-lower-bound:
-    name: Rust build/test against tree-sitter 0.26 (ABI 15 lower bound)
+  min-tree-sitter:
+    name: Rust build/test against tree-sitter 0.26 (lowest tested version)
     needs: changes
     if: github.event.pull_request.draft != true && needs.changes.outputs.code_changed == 'true'
     runs-on: ubuntu-latest
@@ -373,11 +373,11 @@ jobs:
       - name: Cache cargo registry and build artifacts
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: abi-lower-bound
+          key: min-tree-sitter
 
       # The verify job above covers 0.27 (the dev-dependency in each grammar's
-      # Cargo.toml). This job covers the oldest release that still reads ABI 15
-      # parsers, so the generated parsers are proven against both ends.
+      # Cargo.toml). This job covers the lowest version the Rust crates are tested
+      # against, so the generated parsers are proven at both ends of that range.
       - name: Pin tree-sitter to 0.26 and test
         run: |
           sed -i 's/^tree-sitter = .*/tree-sitter = "0.26"/' dataweave/Cargo.toml raml/Cargo.toml
@@ -521,7 +521,7 @@ jobs:
 
   ci:
     name: ${{ github.event_name == 'push' && 'Verify (push)' || 'Verify' }}
-    needs: [changes, verify, abi-lower-bound, node-binding, secret-scanning, pr-title, workflow-meta]
+    needs: [changes, verify, min-tree-sitter, node-binding, secret-scanning, pr-title, workflow-meta]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -558,7 +558,7 @@ jobs:
           if os.environ['CODE_CHANGED'] not in ('true', 'false'):
               raise SystemExit('::error::Missing or invalid change classification')
           if os.environ['IS_DRAFT'] == 'true' or os.environ['CODE_CHANGED'] == 'false':
-              allowed.update(('verify', 'abi-lower-bound', 'node-binding'))
+              allowed.update(('verify', 'min-tree-sitter', 'node-binding'))
           unexpected = [
               name for name, result in needs.items()
               if result['result'] == 'skipped' and name not in allowed
