@@ -72,6 +72,7 @@ triple_quoted_string
 type_directive
 type_field
 type_name
+type_parameter
 type_parameters
 type_with_parameters
 unary_expression

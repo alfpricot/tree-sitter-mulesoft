@@ -122,7 +122,11 @@ export default grammar({
         field('type', $._type),
       ),
 
-    type_parameters: ($) => seq('<', commaSep1($.identifier), '>'),
+    type_parameters: ($) => seq('<', commaSep1($.type_parameter), '>'),
+
+    // `T`, or `T <: Bound` for a bounded parameter.
+    type_parameter: ($) =>
+      seq(field('name', $.identifier), optional(seq('<:', field('bound', $._type)))),
 
     namespace_directive: ($) =>
       seq(

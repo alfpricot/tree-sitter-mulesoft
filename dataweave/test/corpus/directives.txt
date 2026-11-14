@@ -113,6 +113,7 @@ Typed var and type parameters
 var name: String = "x"
 fun id<T>(x: T): T = x
 fun pair<A, B>(a: A, b: B) = a
+fun sizeOf<T <: Object>(x: T): Number = 1
 type Box<T> = { value: T }
 ---
 name
@@ -132,7 +133,8 @@ name
     (fun_directive
       (identifier)
       (type_parameters
-        (identifier))
+        (type_parameter
+          (identifier)))
       (parameter_list
         (parameter
           (identifier)
@@ -144,8 +146,10 @@ name
     (fun_directive
       (identifier)
       (type_parameters
-        (identifier)
-        (identifier))
+        (type_parameter
+          (identifier))
+        (type_parameter
+          (identifier)))
       (parameter_list
         (parameter
           (identifier)
@@ -156,10 +160,24 @@ name
           (type_name
             (identifier))))
       (identifier))
+    (fun_directive
+      (identifier)
+      (type_parameters
+        (type_parameter
+          (identifier)
+          (type_name)))
+      (parameter_list
+        (parameter
+          (identifier)
+          (type_name
+            (identifier))))
+      (type_name)
+      (number))
     (type_directive
       (identifier)
       (type_parameters
-        (identifier))
+        (type_parameter
+          (identifier)))
       (object_type
         (type_field
           (identifier)
