@@ -36,6 +36,8 @@ export default grammar({
     [$._expression, $.parameter],
     // A conditional key and a typed lambda share the prefix `(name:`.
     [$._object_key, $.lambda_expression],
+    // `Foo <` after `as` or `is` is a type application or a comparison.
+    [$.type_name, $.type_application],
   ],
 
   word: ($) => $.identifier,
@@ -169,6 +171,7 @@ export default grammar({
     _type: ($) =>
       choice(
         $.type_name,
+        $.type_application,
         $.type_with_parameters,
         $.array_type,
         $.object_type,
@@ -211,9 +214,19 @@ export default grammar({
         seq(field('type', choice($.type_name, $.identifier)), field('parameters', $.object)),
       ),
 
+    // A declared generic applied to arguments, as in `Box<String>`. After
+    // `x as Foo` a `<` can also start a comparison, so the parser keeps both
+    // readings and the one whose arguments close with `>` survives.
+    type_application: ($) =>
+      prec.dynamic(
+        1,
+        seq(field('type', $.identifier), '<', commaSep1(field('argument', $._type)), '>'),
+      ),
+
     array_type: ($) => prec(1, choice(seq('Array', '<', $._type, '>'), seq($._type, '[', ']'))),
 
-    object_type: ($) => seq('{', repeat(seq($.type_field, optional(','))), '}'),
+    object_type: ($) =>
+      seq('{', optional(seq($.type_field, repeat(seq(',', $.type_field)), optional(','))), '}'),
 
     type_field: ($) =>
       seq(
@@ -560,13 +573,36 @@ export default grammar({
         choice(
           seq(
             field('object', $._expression),
-            choice('.@', '@'),
+            '@',
             field('attribute', choice($.identifier, $.string, $.qualified_name)),
+          ),
+          seq(
+            field('object', $._expression),
+            '.@',
+            field(
+              'attribute',
+              choice(
+                alias($._immediate_identifier, $.identifier),
+                $.string,
+                alias($._immediate_qualified_name, $.qualified_name),
+              ),
+            ),
           ),
           // A bare `.@` selects every attribute of the value. It ranks below
           // the named form so `x.@id` reads `id` as the attribute name.
           prec(PREC.SELECTOR - 1, seq(field('object', $._expression), '.@')),
         ),
+      ),
+
+    // The attribute name must touch the `.@`, so `x.@ mapObject f` reads
+    // `mapObject` as the infix function applied to a bare `.@`.
+    _immediate_identifier: (_) => token.immediate(/[a-zA-Z_][a-zA-Z0-9_]*/),
+
+    _immediate_qualified_name: ($) =>
+      seq(
+        field('namespace', alias($._immediate_identifier, $.identifier)),
+        '#',
+        field('name', choice($.identifier, $.string)),
       ),
 
     metadata_expression: ($) =>

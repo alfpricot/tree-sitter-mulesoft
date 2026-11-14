@@ -236,13 +236,9 @@ jobs:
 
       - name: Fail if node-kind snapshots are out of date
         run: |
-          cd dataweave
-          node test/generate-node-kinds.mjs
-          git diff --exit-code -- test/node-kinds.txt
-          cd ../raml
-          node test/generate-node-kinds.mjs
-          git diff --exit-code -- test/node-kinds.txt
-          cd ..
+          node tools/generate-node-kinds.mjs dataweave
+          node tools/generate-node-kinds.mjs raml
+          git diff --exit-code -- dataweave/test/node-kinds.txt raml/test/node-kinds.txt
 
       - name: Run DataWeave corpus and highlight tests
         run: |

@@ -1,8 +1,14 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
-const dir = fileURLToPath(new URL('.', import.meta.url));
-const nodeTypes = JSON.parse(readFileSync(`${dir}../src/node-types.json`, 'utf8'));
+// Usage: node tools/generate-node-kinds.mjs <grammar-dir> (`dataweave` or `raml`).
+const grammarDir = process.argv[2];
+if (grammarDir === undefined) {
+  console.error('usage: node tools/generate-node-kinds.mjs <grammar-dir>');
+  process.exit(2);
+}
+const root = resolve(grammarDir);
+const nodeTypes = JSON.parse(readFileSync(`${root}/src/node-types.json`, 'utf8'));
 const named = nodeTypes.filter((node) => node.named);
 
 const kinds = [...new Set(named.map((node) => node.type))].sort();
@@ -21,4 +27,4 @@ const fieldLines = named
   )
   .sort();
 
-writeFileSync(`${dir}node-kinds.txt`, `${[...kinds, ...fieldLines].join('\n')}\n`);
+writeFileSync(`${root}/test/node-kinds.txt`, `${[...kinds, ...fieldLines].join('\n')}\n`);

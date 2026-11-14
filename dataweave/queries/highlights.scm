@@ -60,6 +60,7 @@
 
 ; Types
 (type_name) @type.builtin
+(type_application type: (identifier) @type)
 (type_directive name: (identifier) @type)
 (namespace_uri) @string.special
 (qualified_name namespace: (identifier) @module)

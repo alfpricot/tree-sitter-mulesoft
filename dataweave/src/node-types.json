@@ -201,6 +201,10 @@
           "named": true
         },
         {
+          "type": "type_application",
+          "named": true
+        },
+        {
           "type": "type_name",
           "named": true
         },
@@ -383,6 +387,10 @@
           },
           {
             "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "type_application",
             "named": true
           },
           {
@@ -2849,6 +2857,10 @@
             "named": true
           },
           {
+            "type": "type_application",
+            "named": true
+          },
+          {
             "type": "type_name",
             "named": true
           },
@@ -4522,6 +4534,10 @@
           "named": true
         },
         {
+          "type": "type_application",
+          "named": true
+        },
+        {
           "type": "type_name",
           "named": true
         },
@@ -4704,6 +4720,10 @@
           },
           {
             "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "type_application",
             "named": true
           },
           {
@@ -5085,6 +5105,10 @@
             "named": true
           },
           {
+            "type": "type_application",
+            "named": true
+          },
+          {
             "type": "type_name",
             "named": true
           },
@@ -5448,6 +5472,10 @@
           },
           {
             "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "type_application",
             "named": true
           },
           {
@@ -7339,6 +7367,10 @@
             "named": true
           },
           {
+            "type": "type_application",
+            "named": true
+          },
+          {
             "type": "type_name",
             "named": true
           },
@@ -7542,6 +7574,10 @@
         },
         {
           "type": "parenthesized_type",
+          "named": true
+        },
+        {
+          "type": "type_application",
           "named": true
         },
         {
@@ -7806,6 +7842,60 @@
     }
   },
   {
+    "type": "type_application",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "array_type",
+            "named": true
+          },
+          {
+            "type": "intersection_type",
+            "named": true
+          },
+          {
+            "type": "object_type",
+            "named": true
+          },
+          {
+            "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "type_application",
+            "named": true
+          },
+          {
+            "type": "type_name",
+            "named": true
+          },
+          {
+            "type": "type_with_parameters",
+            "named": true
+          },
+          {
+            "type": "union_type",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "type_directive",
     "named": true,
     "fields": {
@@ -7837,6 +7927,10 @@
           },
           {
             "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "type_application",
             "named": true
           },
           {
@@ -7904,6 +7998,10 @@
             "named": true
           },
           {
+            "type": "type_application",
+            "named": true
+          },
+          {
             "type": "type_name",
             "named": true
           },
@@ -7956,6 +8054,10 @@
           },
           {
             "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "type_application",
             "named": true
           },
           {
@@ -8202,6 +8304,10 @@
         },
         {
           "type": "parenthesized_type",
+          "named": true
+        },
+        {
+          "type": "type_application",
           "named": true
         },
         {
@@ -8695,6 +8801,10 @@
           },
           {
             "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "type_application",
             "named": true
           },
           {
