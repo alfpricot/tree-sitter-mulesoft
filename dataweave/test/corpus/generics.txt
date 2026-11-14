@@ -1,0 +1,167 @@
+==================
+Generic type applied in a variable type
+==================
+
+%dw 2.0
+type Box<T> = {v: T}
+var b: Box<String> = x
+var c: Map<String, Array<Number>> = y
+---
+b
+
+---
+
+(document
+  (header
+    (version_directive
+      version: (version_number))
+    (type_directive
+      name: (identifier)
+      type_parameters: (type_parameters
+        (type_parameter
+          name: (identifier)))
+      type: (object_type
+        (type_field
+          name: (identifier)
+          type: (type_name
+            (identifier)))))
+    (var_directive
+      name: (identifier)
+      type: (type_application
+        type: (identifier)
+        argument: (type_name))
+      value: (identifier))
+    (var_directive
+      name: (identifier)
+      type: (type_application
+        type: (identifier)
+        argument: (type_name)
+        argument: (array_type
+          (type_name)))
+      value: (identifier)))
+  (identifier))
+
+==================
+Generic application after is, comparison after as
+==================
+
+%dw 2.0
+---
+[x is Box<String>, x as Foo < 3, x as Foo<3, x as Foo < 3 and y > 2]
+
+---
+
+(document
+  (header
+    (version_directive
+      version: (version_number)))
+  (array
+    (is_expression
+      expression: (identifier)
+      type: (type_application
+        type: (identifier)
+        argument: (type_name)))
+    (binary_expression
+      (as_expression
+        expression: (identifier)
+        type: (type_name
+          (identifier)))
+      (number))
+    (binary_expression
+      (as_expression
+        expression: (identifier)
+        type: (type_name
+          (identifier)))
+      (number))
+    (binary_expression
+      (binary_expression
+        (as_expression
+          expression: (identifier)
+          type: (type_name
+            (identifier)))
+        (number))
+      (binary_expression
+        (identifier)
+        (number)))))
+
+==================
+Attribute name must touch the selector
+==================
+
+%dw 2.0
+---
+[payload.@id, payload.@ mapObject f, payload.@ filter y, payload.@"a", payload.@ns#n, payload @ id]
+
+---
+
+(document
+  (header
+    (version_directive
+      version: (version_number)))
+  (array
+    (attribute_expression
+      object: (identifier)
+      attribute: (identifier))
+    (infix_call
+      left: (attribute_expression
+        object: (identifier))
+      function: (identifier)
+      right: (identifier))
+    (infix_call
+      left: (attribute_expression
+        object: (identifier))
+      function: (identifier)
+      right: (identifier))
+    (attribute_expression
+      object: (identifier)
+      attribute: (string
+        (double_quoted_string
+          (string_content))))
+    (attribute_expression
+      object: (identifier)
+      attribute: (qualified_name
+        namespace: (identifier)
+        name: (identifier)))
+    (attribute_expression
+      object: (identifier)
+      attribute: (identifier))))
+
+==================
+Object types take commas between fields
+==================
+
+%dw 2.0
+type P = {a: String, b?: Number,}
+---
+1
+
+---
+
+(document
+  (header
+    (version_directive
+      version: (version_number))
+    (type_directive
+      name: (identifier)
+      type: (object_type
+        (type_field
+          name: (identifier)
+          type: (type_name))
+        (type_field
+          name: (identifier)
+          type: (type_name)))))
+  (number))
+
+==================
+Object types require commas between fields
+:error
+==================
+
+%dw 2.0
+type Q = {a: String b: Number}
+---
+1
+
+---
+
+(document)
