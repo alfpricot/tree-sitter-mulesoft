@@ -226,11 +226,7 @@ export default grammar({
     array_type: ($) => prec(1, choice(seq('Array', '<', $._type, '>'), seq($._type, '[', ']'))),
 
     object_type: ($) =>
-      seq(
-        '{',
-        optional(seq($.type_field, repeat(seq(',', $.type_field)), optional(','))),
-        '}',
-      ),
+      seq('{', optional(seq($.type_field, repeat(seq(',', $.type_field)), optional(','))), '}'),
 
     type_field: ($) =>
       seq(
