@@ -323,7 +323,7 @@ unless (a) 1 else 2
     (number)))
 
 ==================
-Elvis and optional chaining operators are not DataWeave
+Elvis operator is not DataWeave
 :error
 ==================
 
@@ -371,3 +371,18 @@ payload match {
       (identifier))
     (match_else
       (null))))
+
+==================
+Postfix existence selector before a member selector
+==================
+
+---
+a?.b
+
+---
+
+(document
+  (member_expression
+    (null_safe_selector
+      (identifier))
+    (identifier)))
