@@ -14,16 +14,17 @@ const PREC = {
   DEFAULT: 4,
   LOGICAL_OR: 5,
   LOGICAL_AND: 6,
-  RELATIONAL: 7,
+  NOT: 7,
   EQUALITY: 8,
-  INFIX: 9,
-  ADD: 10,
-  MULTIPLY: 11,
-  UNARY: 12,
-  AS_IS: 13,
-  CALL: 14,
-  SELECTOR: 15,
-  PRIMARY: 16,
+  RELATIONAL: 9,
+  INFIX: 10,
+  ADD: 11,
+  MULTIPLY: 12,
+  UNARY: 13,
+  AS_IS: 14,
+  CALL: 15,
+  SELECTOR: 16,
+  PRIMARY: 17,
 };
 
 export default grammar({
@@ -239,7 +240,11 @@ export default grammar({
       choice($.object, $.array, $.string, $.number, $.boolean, $.null, $.regex, $.date_time),
 
     // --- Object literal ---
-    object: ($) => seq('{', repeat(seq($.object_entry, optional(','))), '}'),
+    // Entries need a separating comma. With the comma optional, a number
+    // key could follow a value directly, so `{ a: i-1 }` lexed `-1` as a new
+    // key instead of a subtraction.
+    object: ($) =>
+      seq('{', optional(seq($.object_entry, repeat(seq(',', $.object_entry)), optional(','))), '}'),
 
     object_entry: ($) =>
       choice($.pair, $.conditional_pair, $.dynamic_pair, $.enclosed_pair, $.spread_expression),
@@ -320,10 +325,13 @@ export default grammar({
     parenthesized_expression: ($) => seq('(', $._expression, ')'),
 
     // --- Operators ---
+    // `not` binds looser than comparison and tighter than `and`, so
+    // `not a == b` negates the whole comparison; `-` and `!` bind tightly.
     unary_expression: ($) =>
-      prec(
-        PREC.UNARY,
-        choice(seq('-', $._expression), seq('!', $._expression), seq('not', $._expression)),
+      choice(
+        prec(PREC.UNARY, seq('-', $._expression)),
+        prec(PREC.UNARY, seq('!', $._expression)),
+        prec(PREC.NOT, seq('not', $._expression)),
       ),
 
     binary_expression: ($) =>
@@ -544,7 +552,7 @@ export default grammar({
  * @returns {SeqRule}
  */
 function commaSep1(rule) {
-  return seq(rule, repeat(seq(choice(',', /\r?\n/), rule)));
+  return seq(rule, repeat(seq(',', rule)));
 }
 
 /**
