@@ -104,7 +104,12 @@ jobs:
             (
               cd "$grammar"
               npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter generate
-              node ../tools/generate-node-kinds.mjs .
+              # A tag cut before the generator moved to tools/ still has its own copy.
+              if [ -f ../tools/generate-node-kinds.mjs ]; then
+                node ../tools/generate-node-kinds.mjs .
+              else
+                node test/generate-node-kinds.mjs
+              fi
               git diff --exit-code -- src/parser.c src/grammar.json src/node-types.json test/node-kinds.txt
               npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter test
               output=$(npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter parse test/fixtures/* 2>&1) || {

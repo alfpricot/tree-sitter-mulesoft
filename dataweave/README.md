@@ -10,7 +10,7 @@ Tree-sitter grammar for MuleSoft DataWeave (`.dwl`).
 - Operators (`++`, `--`, `~=`, `default`, `as`, `is`, `and`, `or`, `not`).
 - Control expressions (`if/else`, `unless/else`, `match/case` with value, type, array (`[head ~ tail]`) and object patterns, `do`).
 - Lambda literals `(x) -> expr`, anonymous parameters (`$`, `$$`), and infix calls.
-- Structural types (`%type`, object types, union/intersection types), type annotations on `var`, and type parameters on `fun` and `type` (`fun id<T>(x: T): T`), and applied generic types (`Box<String>`).
+- Structural types (`%type`, object types, union/intersection types), type annotations on `var`, type parameters on `fun` and `type` (`fun id<T>(x: T): T`), and applied generic types such as `Box<String>`.
 
 ## License
 
