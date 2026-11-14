@@ -34,7 +34,7 @@ tag_prefix
 timestamp_scalar
 yaml_directive
 yaml_version
-block_mapping_pair.key -> block_node|flow_node
-block_mapping_pair.value -> block_node|flow_node
-flow_pair.key -> flow_node
-flow_pair.value -> flow_node
+block_mapping_pair.key? -> block_node|flow_node
+block_mapping_pair.value? -> block_node|flow_node
+flow_pair.key? -> flow_node
+flow_pair.value? -> flow_node
