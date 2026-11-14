@@ -104,7 +104,7 @@ jobs:
             (
               cd "$grammar"
               npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter generate
-              node test/generate-node-kinds.mjs
+              node ../tools/generate-node-kinds.mjs .
               git diff --exit-code -- src/parser.c src/grammar.json src/node-types.json test/node-kinds.txt
               npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter test
               output=$(npx --yes --package=tree-sitter-cli@${{ env.TREE_SITTER_CLI_VERSION }} -- tree-sitter parse test/fixtures/* 2>&1) || {

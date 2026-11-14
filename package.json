@@ -14,7 +14,7 @@
     "test": "npm run test:dw && npm run test:raml",
     "test:dw": "cd dataweave && tree-sitter test",
     "test:raml": "cd raml && tree-sitter test",
-    "node-kinds": "node dataweave/test/generate-node-kinds.mjs && node raml/test/generate-node-kinds.mjs",
+    "node-kinds": "node tools/generate-node-kinds.mjs dataweave && node tools/generate-node-kinds.mjs raml",
     "lint": "oxlint dataweave/grammar.js dataweave/test dataweave/bindings/node raml/grammar.js raml/test raml/bindings/node tools",
     "format": "oxfmt dataweave/grammar.js \"dataweave/test/*.mjs\" \"dataweave/bindings/node/*.js\" raml/grammar.js \"raml/test/*.mjs\" \"raml/bindings/node/*.js\" \"tools/*.mjs\"",
     "format:check": "oxfmt --check dataweave/grammar.js \"dataweave/test/*.mjs\" \"dataweave/bindings/node/*.js\" raml/grammar.js \"raml/test/*.mjs\" \"raml/bindings/node/*.js\" \"tools/*.mjs\""
