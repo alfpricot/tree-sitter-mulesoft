@@ -40,8 +40,8 @@ CC=gcc CXX=g++ cargo test
 Corpus suites, plus a refresh of each node-kind snapshot after a grammar change:
 
 ```bash
-cd dataweave && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter test && node test/generate-node-kinds.mjs
-cd ../raml && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter test && node test/generate-node-kinds.mjs
+cd dataweave && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter test && node ../tools/generate-node-kinds.mjs .
+cd ../raml && npx --yes --package=tree-sitter-cli@0.27.1 -- tree-sitter test && node ../tools/generate-node-kinds.mjs .
 ```
 
 `dataweave/test/corpus/` and `raml/test/corpus/` contain focused tree assertions. The fixtures in each `test/fixtures/` are larger real-shaped samples and must parse without `ERROR` or `MISSING` nodes.

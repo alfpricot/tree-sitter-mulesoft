@@ -30,6 +30,7 @@
 ; Keywords
 [
   "if"
+  "unless"
   "else"
   "match"
   "case"
@@ -59,6 +60,7 @@
 
 ; Types
 (type_name) @type.builtin
+(type_application type: (identifier) @type)
 (type_directive name: (identifier) @type)
 (namespace_uri) @string.special
 (qualified_name namespace: (identifier) @module)
@@ -74,6 +76,8 @@
 (member_expression property: (identifier) @property)
 (descendant_expression property: (identifier) @property)
 (multi_value_expression property: (identifier) @property)
+(multi_descendant_expression property: (identifier) @property)
+(metadata_expression property: (identifier) @property)
 
 ; Parameters & Variables
 (parameter name: (identifier) @variable.parameter)

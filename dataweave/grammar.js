@@ -14,16 +14,17 @@ const PREC = {
   DEFAULT: 4,
   LOGICAL_OR: 5,
   LOGICAL_AND: 6,
-  RELATIONAL: 7,
+  NOT: 7,
   EQUALITY: 8,
-  INFIX: 9,
-  ADD: 10,
-  MULTIPLY: 11,
-  UNARY: 12,
-  AS_IS: 13,
-  CALL: 14,
-  SELECTOR: 15,
-  PRIMARY: 16,
+  RELATIONAL: 9,
+  INFIX: 10,
+  ADD: 11,
+  MULTIPLY: 12,
+  UNARY: 13,
+  AS_IS: 14,
+  CALL: 15,
+  SELECTOR: 16,
+  PRIMARY: 17,
 };
 
 export default grammar({
@@ -35,6 +36,8 @@ export default grammar({
     [$._expression, $.parameter],
     // A conditional key and a typed lambda share the prefix `(name:`.
     [$._object_key, $.lambda_expression],
+    // `Foo <` after `as` or `is` is a type application or a comparison.
+    [$.type_name, $.type_application],
   ],
 
   word: ($) => $.identifier,
@@ -91,12 +94,19 @@ export default grammar({
       ),
 
     var_directive: ($) =>
-      seq(choice('%var', 'var'), field('name', $.identifier), '=', field('value', $._expression)),
+      seq(
+        choice('%var', 'var'),
+        field('name', $.identifier),
+        optional(seq(':', field('type', $._type))),
+        '=',
+        field('value', $._expression),
+      ),
 
     fun_directive: ($) =>
       seq(
         choice('%fun', '%function', 'fun'),
         field('name', $.identifier),
+        optional(field('type_parameters', $.type_parameters)),
         '(',
         optional($.parameter_list),
         ')',
@@ -106,7 +116,19 @@ export default grammar({
       ),
 
     type_directive: ($) =>
-      seq(choice('%type', 'type'), field('name', $.identifier), '=', field('type', $._type)),
+      seq(
+        choice('%type', 'type'),
+        field('name', $.identifier),
+        optional(field('type_parameters', $.type_parameters)),
+        '=',
+        field('type', $._type),
+      ),
+
+    type_parameters: ($) => seq('<', commaSep1($.type_parameter), '>'),
+
+    // `T`, or `T <: Bound` for a bounded parameter.
+    type_parameter: ($) =>
+      seq(field('name', $.identifier), optional(seq('<:', field('bound', $._type)))),
 
     namespace_directive: ($) =>
       seq(
@@ -149,6 +171,7 @@ export default grammar({
     _type: ($) =>
       choice(
         $.type_name,
+        $.type_application,
         $.type_with_parameters,
         $.array_type,
         $.object_type,
@@ -191,9 +214,19 @@ export default grammar({
         seq(field('type', choice($.type_name, $.identifier)), field('parameters', $.object)),
       ),
 
+    // A declared generic applied to arguments, as in `Box<String>`. After
+    // `x as Foo` a `<` can also start a comparison, so the parser keeps both
+    // readings and the one whose arguments close with `>` survives.
+    type_application: ($) =>
+      prec.dynamic(
+        1,
+        seq(field('type', $.identifier), '<', commaSep1(field('argument', $._type)), '>'),
+      ),
+
     array_type: ($) => prec(1, choice(seq('Array', '<', $._type, '>'), seq($._type, '[', ']'))),
 
-    object_type: ($) => seq('{', repeat(seq($.type_field, optional(','))), '}'),
+    object_type: ($) =>
+      seq('{', optional(seq($.type_field, repeat(seq(',', $.type_field)), optional(','))), '}'),
 
     type_field: ($) =>
       seq(
@@ -221,15 +254,19 @@ export default grammar({
         $.is_expression,
         $.default_expression,
         $.if_expression,
+        $.unless_expression,
         $.match_expression,
         $.do_expression,
         $.lambda_expression,
         $.call_expression,
         $.member_expression,
         $.descendant_expression,
+        $.multi_descendant_expression,
         $.multi_value_expression,
         $.attribute_expression,
         $.key_expression,
+        $.metadata_expression,
+        $.namespace_expression,
         $.null_safe_selector,
         $.index_expression,
         $.filter_selector_expression,
@@ -239,7 +276,11 @@ export default grammar({
       choice($.object, $.array, $.string, $.number, $.boolean, $.null, $.regex, $.date_time),
 
     // --- Object literal ---
-    object: ($) => seq('{', repeat(seq($.object_entry, optional(','))), '}'),
+    // Entries need a separating comma. With the comma optional, a number
+    // key could follow a value directly, so `{ a: i-1 }` lexed `-1` as a new
+    // key instead of a subtraction.
+    object: ($) =>
+      seq('{', optional(seq($.object_entry, repeat(seq(',', $.object_entry)), optional(','))), '}'),
 
     object_entry: ($) =>
       choice($.pair, $.conditional_pair, $.dynamic_pair, $.enclosed_pair, $.spread_expression),
@@ -320,10 +361,13 @@ export default grammar({
     parenthesized_expression: ($) => seq('(', $._expression, ')'),
 
     // --- Operators ---
+    // `not` binds looser than comparison and tighter than `and`, so
+    // `not a == b` negates the whole comparison; `-` and `!` bind tightly.
     unary_expression: ($) =>
-      prec(
-        PREC.UNARY,
-        choice(seq('-', $._expression), seq('!', $._expression), seq('not', $._expression)),
+      choice(
+        prec(PREC.UNARY, seq('-', $._expression)),
+        prec(PREC.UNARY, seq('!', $._expression)),
+        prec(PREC.NOT, seq('not', $._expression)),
       ),
 
     binary_expression: ($) =>
@@ -358,11 +402,7 @@ export default grammar({
     default_expression: ($) =>
       prec.right(
         PREC.DEFAULT,
-        seq(
-          field('expression', $._expression),
-          choice('default', '?:'),
-          field('default', $._expression),
-        ),
+        seq(field('expression', $._expression), 'default', field('default', $._expression)),
       ),
 
     // --- Control Flow ---
@@ -371,6 +411,20 @@ export default grammar({
         PREC.IF,
         seq(
           'if',
+          '(',
+          field('condition', $._expression),
+          ')',
+          field('consequence', $._expression),
+          'else',
+          field('alternative', $._expression),
+        ),
+      ),
+
+    unless_expression: ($) =>
+      prec.right(
+        PREC.IF,
+        seq(
+          'unless',
           '(',
           field('condition', $._expression),
           ')',
@@ -397,6 +451,7 @@ export default grammar({
       seq(
         'case',
         choice(
+          field('pattern', choice($.array_pattern, $.object_pattern)),
           seq(
             optional(seq(field('variable', $.identifier), ':')),
             field('pattern', choice($.string, $.number, $.boolean, $.null)),
@@ -414,6 +469,26 @@ export default grammar({
         ),
         '->',
         field('consequence', $._expression),
+      ),
+
+    // `[]` and `[head ~ tail]`.
+    array_pattern: ($) =>
+      seq('[', optional(seq(field('head', $.identifier), '~', field('tail', $.identifier))), ']'),
+
+    // `{}` and `{ key: value ~ rest }`.
+    object_pattern: ($) =>
+      seq(
+        '{',
+        optional(
+          seq(
+            field('key', choice($.identifier, $.string)),
+            ':',
+            field('value', $.identifier),
+            '~',
+            field('rest', $.identifier),
+          ),
+        ),
+        '}',
       ),
 
     match_else: ($) =>
@@ -472,6 +547,16 @@ export default grammar({
         ),
       ),
 
+    multi_descendant_expression: ($) =>
+      prec.left(
+        PREC.SELECTOR,
+        seq(
+          field('object', $._expression),
+          '..*',
+          field('property', choice($.identifier, $.string, $.qualified_name)),
+        ),
+      ),
+
     multi_value_expression: ($) =>
       prec.left(
         PREC.SELECTOR,
@@ -485,12 +570,54 @@ export default grammar({
     attribute_expression: ($) =>
       prec.left(
         PREC.SELECTOR,
-        seq(
-          field('object', $._expression),
-          choice('.@', '@'),
-          field('attribute', choice($.identifier, $.string, $.qualified_name)),
+        choice(
+          seq(
+            field('object', $._expression),
+            '@',
+            field('attribute', choice($.identifier, $.string, $.qualified_name)),
+          ),
+          seq(
+            field('object', $._expression),
+            '.@',
+            field(
+              'attribute',
+              choice(
+                alias($._immediate_identifier, $.identifier),
+                $.string,
+                alias($._immediate_qualified_name, $.qualified_name),
+              ),
+            ),
+          ),
+          // A bare `.@` selects every attribute of the value. It ranks below
+          // the named form so `x.@id` reads `id` as the attribute name.
+          prec(PREC.SELECTOR - 1, seq(field('object', $._expression), '.@')),
         ),
       ),
+
+    // The attribute name must touch the `.@`, so `x.@ mapObject f` reads
+    // `mapObject` as the infix function applied to a bare `.@`.
+    _immediate_identifier: (_) => token.immediate(/[a-zA-Z_][a-zA-Z0-9_]*/),
+
+    _immediate_qualified_name: ($) =>
+      seq(
+        field('namespace', alias($._immediate_identifier, $.identifier)),
+        '#',
+        field('name', choice($.identifier, $.string)),
+      ),
+
+    metadata_expression: ($) =>
+      prec.left(
+        PREC.SELECTOR,
+        seq(
+          field('object', $._expression),
+          '.^',
+          field('property', choice($.identifier, $.string)),
+        ),
+      ),
+
+    // `.#` selects the namespace of a key.
+    namespace_expression: ($) =>
+      prec.left(PREC.SELECTOR, seq(field('object', $._expression), '.#')),
 
     key_expression: ($) =>
       prec.left(
@@ -508,7 +635,7 @@ export default grammar({
         choice(
           seq(
             field('object', $._expression),
-            choice('?.', '.?'),
+            '.?',
             field('property', choice($.identifier, $.string)),
           ),
           seq(field('object', $._expression), '?'),
@@ -544,7 +671,7 @@ export default grammar({
  * @returns {SeqRule}
  */
 function commaSep1(rule) {
-  return seq(rule, repeat(seq(choice(',', /\r?\n/), rule)));
+  return seq(rule, repeat(seq(',', rule)));
 }
 
 /**

@@ -1,0 +1,424 @@
+==================
+Block scalars
+==================
+
+#%RAML 1.0
+title: Orders
+description: |
+  Lists orders.
+  Supports paging.
+summary: >
+  Folded text
+  on two lines.
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (block_node
+            (block_scalar)))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (block_node
+            (block_scalar)))))))
+
+==================
+Flow mappings and sequences
+==================
+
+#%RAML 1.0
+title: Orders
+securedBy: [oauth_2_0, { oauth_2_0: { scopes: [read, write] } }]
+queryParameters: { page: { type: integer, default: 1 } }
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (flow_sequence
+              (flow_node
+                (plain_scalar
+                  (string_scalar)))
+              (flow_node
+                (flow_mapping
+                  (flow_pair
+                    key: (flow_node
+                      (plain_scalar
+                        (string_scalar)))
+                    value: (flow_node
+                      (flow_mapping
+                        (flow_pair
+                          key: (flow_node
+                            (plain_scalar
+                              (string_scalar)))
+                          value: (flow_node
+                            (flow_sequence
+                              (flow_node
+                                (plain_scalar
+                                  (string_scalar)))
+                              (flow_node
+                                (plain_scalar
+                                  (string_scalar))))))))))))))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (flow_mapping
+              (flow_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                value: (flow_node
+                  (flow_mapping
+                    (flow_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (flow_node
+                        (plain_scalar
+                          (string_scalar))))
+                    (flow_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (flow_node
+                        (plain_scalar
+                          (integer_scalar))))))))))))))
+
+==================
+Resource type and trait lists
+==================
+
+#%RAML 1.0
+title: Orders
+resourceTypes:
+  collection:
+    get:
+      is: [paged]
+traits:
+  paged:
+    queryParameters:
+      page:
+        type: integer
+/orders:
+  type: collection
+  get:
+    is: [paged, secured: { scope: read }]
+    securedBy:
+      - secured: { scope: read }
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (block_node
+            (block_mapping
+              (block_mapping_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                value: (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            key: (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            value: (flow_node
+                              (flow_sequence
+                                (flow_node
+                                  (plain_scalar
+                                    (string_scalar)))))))))))))))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (block_node
+            (block_mapping
+              (block_mapping_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                value: (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            key: (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            value: (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  key: (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  value: (flow_node
+                                    (plain_scalar
+                                      (string_scalar))))))))))))))))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (block_node
+            (block_mapping
+              (block_mapping_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                value: (flow_node
+                  (plain_scalar
+                    (string_scalar))))
+              (block_mapping_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                value: (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (flow_node
+                        (flow_sequence
+                          (flow_node
+                            (plain_scalar
+                              (string_scalar)))
+                          (flow_pair
+                            key: (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            value: (flow_node
+                              (flow_mapping
+                                (flow_pair
+                                  key: (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  value: (flow_node
+                                    (plain_scalar
+                                      (string_scalar))))))))))
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (block_node
+                        (block_sequence
+                          (block_sequence_item
+                            (block_node
+                              (block_mapping
+                                (block_mapping_pair
+                                  key: (flow_node
+                                    (plain_scalar
+                                      (string_scalar)))
+                                  value: (flow_node
+                                    (flow_mapping
+                                      (flow_pair
+                                        key: (flow_node
+                                          (plain_scalar
+                                            (string_scalar)))
+                                        value: (flow_node
+                                          (plain_scalar
+                                            (string_scalar)))))))))))))))))))))))
+
+==================
+Anchors and aliases
+==================
+
+#%RAML 1.0
+title: Orders
+types:
+  Base: &base
+    properties:
+      id: string
+  Order:
+    <<: *base
+    properties:
+      total: number
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (block_node
+            (block_mapping
+              (block_mapping_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                value: (block_node
+                  (anchor
+                    (anchor_name))
+                  (block_mapping
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            key: (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            value: (flow_node
+                              (plain_scalar
+                                (string_scalar))))))))))
+              (block_mapping_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                value: (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (flow_node
+                        (alias
+                          (alias_name))))
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (block_node
+                        (block_mapping
+                          (block_mapping_pair
+                            key: (flow_node
+                              (plain_scalar
+                                (string_scalar)))
+                            value: (flow_node
+                              (plain_scalar
+                                (string_scalar)))))))))))))))))
+
+==================
+Comments after content
+==================
+
+#%RAML 1.0
+title: Orders # the API title
+version: v1 # first release
+baseUri: https://api.example.com # no trailing slash
+/orders: # collection
+  get: # list
+    description: Lists orders.
+
+---
+
+(stream
+  (comment)
+  (document
+    (block_node
+      (block_mapping
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (comment)
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (comment)
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          value: (flow_node
+            (plain_scalar
+              (string_scalar))))
+        (comment)
+        (block_mapping_pair
+          key: (flow_node
+            (plain_scalar
+              (string_scalar)))
+          (comment)
+          value: (block_node
+            (block_mapping
+              (block_mapping_pair
+                key: (flow_node
+                  (plain_scalar
+                    (string_scalar)))
+                (comment)
+                value: (block_node
+                  (block_mapping
+                    (block_mapping_pair
+                      key: (flow_node
+                        (plain_scalar
+                          (string_scalar)))
+                      value: (flow_node
+                        (plain_scalar
+                          (string_scalar))))))))))))))
