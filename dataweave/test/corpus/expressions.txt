@@ -216,3 +216,104 @@ Division inside array elements
         (number)))
     (regex)
     (number)))
+
+==================
+Call arguments across lines
+==================
+
+---
+f(
+  1,
+  2
+)
+
+---
+
+(document
+  (call_expression
+    (identifier)
+    (number)
+    (number)))
+
+==================
+Missing comma between call arguments
+:error
+==================
+
+---
+f(a
+b)
+
+---
+
+(document)
+
+==================
+Subtraction after an object value
+==================
+
+---
+{ a: i-1, b: i - 1 }
+
+---
+
+(document
+  (object
+    (object_entry
+      (pair
+        (identifier)
+        (binary_expression
+          (identifier)
+          (number))))
+    (object_entry
+      (pair
+        (identifier)
+        (binary_expression
+          (identifier)
+          (number))))))
+
+==================
+Missing comma between object entries
+:error
+==================
+
+---
+{ a: i
+  b: 2 }
+
+---
+
+(document)
+
+==================
+Relational operators bind tighter than equality
+==================
+
+---
+a < b == c
+
+---
+
+(document
+  (binary_expression
+    (binary_expression
+      (identifier)
+      (identifier))
+    (identifier)))
+
+==================
+Not binds looser than comparison and tighter than and
+==================
+
+---
+not a == b and c
+
+---
+
+(document
+  (binary_expression
+    (unary_expression
+      (binary_expression
+        (identifier)
+        (identifier)))
+    (identifier)))
