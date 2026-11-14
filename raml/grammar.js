@@ -3,9 +3,10 @@
  *
  * RAML is YAML at its syntactic core, so the block/flow rule structure and the
  * external indentation scanner are adapted from tree-sitter-yaml
- * (copyright 2020 Ika, MIT) — see NOTICE. The RAML layer on top is the
- * `#%RAML` header comment, resource path keys, method blocks and the
- * `!include` tag.
+ * (copyright 2020 Ika, MIT) — see NOTICE. This is a YAML 1.2 grammar named
+ * for RAML: it adds no RAML-specific rules, so the `#%RAML` header is a plain
+ * comment, `!include` is a generic tag, and resource paths, methods, types,
+ * traits and the like are ordinary mappings.
  *
  * @author Ika <ikatyang@gmail.com> (original YAML grammar)
  * @author M. Reifschneider (RAML adaptation)

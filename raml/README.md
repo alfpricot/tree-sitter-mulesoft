@@ -2,14 +2,15 @@
 
 Tree-sitter grammar for RESTful API Modeling Language (RAML, `.raml`).
 
-## Features
+## Scope
 
-- Support for RAML 1.0 and 0.8 specifications.
-- Root properties (`title`, `version`, `baseUri`, `protocols`, `mediaType`, `documentation`).
-- Resource path trees (`/resource/{id}`), URI parameters, and nested resources.
-- HTTP method blocks (`get`, `post`, `put`, `delete`, `patch`) with headers, query parameters, bodies, and responses.
-- RAML custom tags (`!include`).
-- Types, schemas, resourceTypes, traits, and securitySchemes.
+This is a YAML 1.2 grammar for files in RAML's YAML syntax. It has no RAML-specific rules, so RAML constructs parse as ordinary YAML:
+
+- The `#%RAML 1.0` header is a comment.
+- Resource paths (`/resource/{id}`), HTTP methods, `types`, `traits`, `resourceTypes`, and `securitySchemes` are block mappings.
+- `!include` is a generic tag.
+
+Tools that need RAML meaning, such as recognizing a resource or a method, interpret the mapping keys on top of the syntax tree.
 
 ## License
 
