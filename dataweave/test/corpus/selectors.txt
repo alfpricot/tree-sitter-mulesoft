@@ -94,3 +94,43 @@ output application/json
                 (anonymous_parameter)
                 (identifier))
               (number))))))))
+
+==================
+Metadata, namespace, multi-value descendant and bare attribute selectors
+==================
+
+---
+{ m: payload.^mimeType, n: payload.#, d: payload..*item, a: payload.@, b: payload.@id }
+
+---
+
+(document
+  (object
+    (object_entry
+      (pair
+        (identifier)
+        (metadata_expression
+          (identifier)
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (namespace_expression
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (multi_descendant_expression
+          (identifier)
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (attribute_expression
+          (identifier))))
+    (object_entry
+      (pair
+        (identifier)
+        (attribute_expression
+          (identifier)
+          (identifier))))))

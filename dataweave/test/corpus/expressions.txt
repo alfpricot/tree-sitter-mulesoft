@@ -13,8 +13,7 @@ output application/json
   matchOperator: "test" ~= /test/,
   typeCoercion: payload.date as Date { format: "yyyy-MM-dd" },
   typeCheck: payload is Object,
-  defaultVal: payload.name default "Guest",
-  elvisVal: payload.email ?: "none"
+  defaultVal: payload.name default "Guest"
 }
 
 ---
@@ -98,16 +97,6 @@ output application/json
         (is_expression
           (identifier)
           (type_name))))
-    (object_entry
-      (pair
-        (identifier)
-        (default_expression
-          (member_expression
-            (identifier)
-            (identifier))
-          (string
-            (double_quoted_string
-              (string_content))))))
     (object_entry
       (pair
         (identifier)
@@ -317,3 +306,68 @@ not a == b and c
         (identifier)
         (identifier)))
     (identifier)))
+
+==================
+Unless expression
+==================
+
+---
+unless (a) 1 else 2
+
+---
+
+(document
+  (unless_expression
+    (identifier)
+    (number)
+    (number)))
+
+==================
+Elvis and optional chaining operators are not DataWeave
+:error
+==================
+
+---
+x ?: 1
+
+---
+
+(document)
+
+==================
+Array and object patterns in match cases
+==================
+
+---
+payload match {
+  case [] -> 0
+  case [h ~ t] -> h
+  case {} -> 1
+  case {k: v ~ r} -> v
+  else -> null
+}
+
+---
+
+(document
+  (match_expression
+    (identifier)
+    (match_case
+      (array_pattern)
+      (number))
+    (match_case
+      (array_pattern
+        (identifier)
+        (identifier))
+      (identifier))
+    (match_case
+      (object_pattern)
+      (number))
+    (match_case
+      (object_pattern
+        (identifier)
+        (identifier)
+        (identifier))
+      (identifier))
+    (match_else
+      (null))))

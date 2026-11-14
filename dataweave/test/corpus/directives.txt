@@ -104,3 +104,65 @@ Timer::currentMilliseconds()
     function: (module_path
       (identifier)
       (identifier))))
+
+==================
+Typed var and type parameters
+==================
+
+%dw 2.0
+var name: String = "x"
+fun id<T>(x: T): T = x
+fun pair<A, B>(a: A, b: B) = a
+type Box<T> = { value: T }
+---
+name
+
+---
+
+(document
+  (header
+    (version_directive
+      (version_number))
+    (var_directive
+      (identifier)
+      (type_name)
+      (string
+        (double_quoted_string
+          (string_content))))
+    (fun_directive
+      (identifier)
+      (type_parameters
+        (identifier))
+      (parameter_list
+        (parameter
+          (identifier)
+          (type_name
+            (identifier))))
+      (type_name
+        (identifier))
+      (identifier))
+    (fun_directive
+      (identifier)
+      (type_parameters
+        (identifier)
+        (identifier))
+      (parameter_list
+        (parameter
+          (identifier)
+          (type_name
+            (identifier)))
+        (parameter
+          (identifier)
+          (type_name
+            (identifier))))
+      (identifier))
+    (type_directive
+      (identifier)
+      (type_parameters
+        (identifier))
+      (object_type
+        (type_field
+          (identifier)
+          (type_name
+            (identifier))))))
+  (identifier))
