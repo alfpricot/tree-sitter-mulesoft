@@ -119,3 +119,56 @@ Typed lambda inside object spread
     (object_entry
       (spread_expression
         (lambda_expression (identifier) (type_name) (identifier))))))
+==================
+Key-value pair as an if branch inside an object
+==================
+
+{ "a": 1, (if (true) "b": 2 else null) }
+
+---
+
+(document
+  (object
+    (object_entry
+      (pair (string (double_quoted_string (string_content))) (number)))
+    (object_entry
+      (if_entry
+        (boolean)
+        (pair (string (double_quoted_string (string_content))) (number))
+        (null)))))
+==================
+Chained if and else if choosing a key inside an object
+==================
+
+{ (if (x == 1) "one": 1 else if (x == 2) "two": 2 else {}) }
+
+---
+
+(document
+  (object
+    (object_entry
+      (if_entry
+        (binary_expression (identifier) (number))
+        (pair (string (double_quoted_string (string_content))) (number))
+        (if_entry
+          (binary_expression (identifier) (number))
+          (pair (string (double_quoted_string (string_content))) (number))
+          (object))))))
+==================
+Parenthesized if with object branches stays an if expression
+==================
+
+{ (if (true) {"b": 2} else {}) }
+
+---
+
+(document
+  (object
+    (object_entry
+      (spread_expression
+        (if_expression
+          (boolean)
+          (object
+            (object_entry
+              (pair (string (double_quoted_string (string_content))) (number))))
+          (object))))))
