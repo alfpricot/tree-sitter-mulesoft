@@ -38,6 +38,10 @@ export default grammar({
     [$._object_key, $.lambda_expression],
     // `Foo <` after `as` or `is` is a type application or a comparison.
     [$.type_name, $.type_application],
+    // `(if (c) a else b)` in an object is an `if_entry` or a parenthesized
+    // `if_expression`; dynamic precedence keeps the expression unless a
+    // branch is a pair.
+    [$.if_entry, $.if_expression],
   ],
 
   word: ($) => $.identifier,
@@ -283,7 +287,39 @@ export default grammar({
       seq('{', optional(seq($.object_entry, repeat(seq(',', $.object_entry)), optional(','))), '}'),
 
     object_entry: ($) =>
-      choice($.pair, $.conditional_pair, $.dynamic_pair, $.enclosed_pair, $.spread_expression),
+      choice(
+        $.pair,
+        $.conditional_pair,
+        $.dynamic_pair,
+        $.enclosed_pair,
+        $.spread_expression,
+        seq('(', $.if_entry, ')'),
+      ),
+
+    // An `if`/`else` inside an object whose branches may be bare key-value
+    // pairs, as in `{ (if (c) "b": 2 else null) }`. When every branch is an
+    // ordinary expression the same text is a parenthesized `if_expression`,
+    // which keeps that parse: the negative dynamic precedence only lets this
+    // rule win where a branch is a pair. The same holds link by link in an
+    // `else if` chain: a link is a nested `if_entry` when it or a later link
+    // has a pair branch, and a trailing run of links without one stays an
+    // `if_expression`.
+    if_entry: ($) =>
+      prec.dynamic(
+        -1,
+        prec.right(
+          PREC.IF,
+          seq(
+            'if',
+            '(',
+            field('condition', $._expression),
+            ')',
+            field('consequence', choice($.pair, $._expression)),
+            'else',
+            field('alternative', choice($.if_entry, $.pair, $._expression)),
+          ),
+        ),
+      ),
 
     pair: ($) =>
       seq(
