@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-dataweave",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DataWeave grammar for tree-sitter",
   "main": "bindings/node",
   "types": "bindings/node",

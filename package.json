@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-mulesoft",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tree-sitter grammars for MuleSoft DataWeave and RAML",
   "private": true,
   "workspaces": [
