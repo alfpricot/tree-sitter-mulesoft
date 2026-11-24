@@ -297,11 +297,13 @@ export default grammar({
       ),
 
     // An `if`/`else` inside an object whose branches may be bare key-value
-    // pairs, as in `{ (if (c) "b": 2 else null) }`; an `else if` chains to
-    // another entry. When every branch is an ordinary expression the same
-    // text is a parenthesized `if_expression`, which keeps that parse: the
-    // negative dynamic precedence only lets this rule win where a branch is
-    // a pair.
+    // pairs, as in `{ (if (c) "b": 2 else null) }`. When every branch is an
+    // ordinary expression the same text is a parenthesized `if_expression`,
+    // which keeps that parse: the negative dynamic precedence only lets this
+    // rule win where a branch is a pair. The same holds link by link in an
+    // `else if` chain: a link is a nested `if_entry` when it or a later link
+    // has a pair branch, and a trailing run of links without one stays an
+    // `if_expression`.
     if_entry: ($) =>
       prec.dynamic(
         -1,
